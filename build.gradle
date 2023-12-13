@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
+    id 'org.ajoberstar.grgit' version '5.2.0'
 }
 
 repositories {
@@ -33,6 +34,12 @@ test {
 tasks.withType(Test) {
     useJUnitPlatform()
 }
+
+def commit_id=getCheckedOutGitCommitHash()
+if (project.version.endsWith("-SNAPSHOT")) {
+    version = "${project.version}".replace("-SNAPSHOT", "-${commit_id}-SNAPSHOT")
+}
+
 
 publishing {
     publications {
@@ -83,7 +90,6 @@ ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 if (isReleaseVersion && !project.hasProperty("skipSigning")) {
     signing {
-//        sign configurations.archives
         sign publishing.publications
     }
 }
@@ -102,6 +108,9 @@ subprojects {
     }
 
     archivesBaseName = 'rocks-types-' + project.name
+    if (project.version.endsWith("-SNAPSHOT")) {
+        version = "${project.version}".replace("-SNAPSHOT", "-${commit_id}-SNAPSHOT")
+    }
 
     dependencies {
         compileOnly libs.lombok
@@ -225,4 +234,8 @@ subprojects {
             sign publishing.publications
         }
     }
+}
+
+def getCheckedOutGitCommitHash() {
+    grgit.head().abbreviatedId
 }
