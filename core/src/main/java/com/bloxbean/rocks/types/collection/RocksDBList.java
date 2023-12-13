@@ -1,7 +1,7 @@
 package com.bloxbean.rocks.types.collection;
 
-import com.bloxbean.cardano.yaci.store.rocksdb.config.RocksDBConfig;
-import com.bloxbean.cardano.yaci.store.rocksdb.types.metadata.ListMetadata;
+import com.bloxbean.rocks.types.collection.metadata.ListMetadata;
+import com.bloxbean.rocks.types.config.RocksDBConfig;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.rocksdb.WriteBatch;

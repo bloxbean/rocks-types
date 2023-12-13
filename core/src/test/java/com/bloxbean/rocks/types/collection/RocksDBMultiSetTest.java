@@ -1,7 +1,5 @@
-package com.bloxbean.cardano.yaci.store.rocksdb.collection;
+package com.bloxbean.rocks.types.collection;
 
-import com.bloxbean.cardano.yaci.store.rocksdb.RocksDBBaseTest;
-import com.bloxbean.cardano.yaci.store.rocksdb.types.RocksDBMultiSet;
 import org.junit.jupiter.api.Test;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;

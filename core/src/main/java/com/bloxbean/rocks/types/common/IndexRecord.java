@@ -1,4 +1,4 @@
-package com.bloxbean.cardano.yaci.store.rocksdb.common;
+package com.bloxbean.rocks.types.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

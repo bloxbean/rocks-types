@@ -1,7 +1,7 @@
-package com.bloxbean.cardano.yaci.store.rocksdb;
+package com.bloxbean.rocks.types.collection;
 
-import com.bloxbean.cardano.yaci.store.rocksdb.config.RocksDBConfig;
-import com.bloxbean.cardano.yaci.store.rocksdb.config.RocksDBProperties;
+import com.bloxbean.rocks.types.config.RocksDBConfig;
+import com.bloxbean.rocks.types.config.RocksDBProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -20,7 +20,6 @@ public class RocksDBBaseTest {
         rocksDBProperties.setColumnFamilies(getColumnFamilies());
 
         rocksDBConfig = new RocksDBConfig(rocksDBProperties);
-        rocksDBConfig.initDB();
     }
 
     @AfterEach

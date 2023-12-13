@@ -1,7 +1,7 @@
 package com.bloxbean.rocks.types.collection;
 
-import com.bloxbean.cardano.yaci.store.rocksdb.config.RocksDBConfig;
-import com.bloxbean.cardano.yaci.store.rocksdb.serializer.Serializer;
+import com.bloxbean.rocks.types.config.RocksDBConfig;
+import com.bloxbean.rocks.types.serializer.Serializer;
 import lombok.SneakyThrows;
 import org.rocksdb.*;
 

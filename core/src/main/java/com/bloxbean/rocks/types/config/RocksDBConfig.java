@@ -1,13 +1,9 @@
-package com.bloxbean.cardano.yaci.store.rocksdb.config;
+package com.bloxbean.rocks.types.config;
 
-import com.bloxbean.cardano.yaci.store.rocksdb.serializer.MessagePackSerializer;
-import com.bloxbean.cardano.yaci.store.rocksdb.serializer.Serializer;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
+import com.bloxbean.rocks.types.serializer.MessagePackSerializer;
+import com.bloxbean.rocks.types.serializer.Serializer;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.*;
-import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,8 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Component
-@RequiredArgsConstructor
 @Slf4j
 public class RocksDBConfig {
     private final RocksDBProperties rocksDBProperties;
@@ -34,7 +28,11 @@ public class RocksDBConfig {
     private Serializer keySerializer;
     private Serializer valueSerializer;
 
-    @PostConstruct
+    public RocksDBConfig(RocksDBProperties rocksDBProperties) {
+        this.rocksDBProperties = rocksDBProperties;
+        initDB();
+    }
+
     public void initDB() {
         try {
             RocksDB.loadLibrary();
@@ -78,7 +76,6 @@ public class RocksDBConfig {
         }
     }
 
-    @PreDestroy
     public void closeDB() {
         for (var columnFamilyHandle : columnFamilyHandles.values()) {
             if (columnFamilyHandle != null)

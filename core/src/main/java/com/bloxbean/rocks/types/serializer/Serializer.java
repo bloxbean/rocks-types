@@ -1,4 +1,4 @@
-package com.bloxbean.cardano.yaci.store.rocksdb.serializer;
+package com.bloxbean.rocks.types.serializer;
 
 public interface Serializer {
     byte[] serialize(Object obj);

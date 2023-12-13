@@ -1,4 +1,4 @@
-package com.bloxbean.cardano.yaci.store.rocksdb.serializer;
+package com.bloxbean.rocks.types.serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
