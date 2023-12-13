@@ -18,7 +18,7 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void addAndContains() {
-        RocksDBMultiSet rocksDBSet = new RocksDBMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
         String list1 = "list1";
         rocksDBSet.add(list1, "one");
         rocksDBSet.add(list1, "two");
@@ -52,20 +52,20 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void addAndContains_batch() throws Exception {
-        RocksDBMultiSet rocksDBSet = new RocksDBMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
         WriteBatch writeBatch = new WriteBatch();
 
         String list1 = "list1";
-        rocksDBSet.add(writeBatch, list1, "one");
-        rocksDBSet.add(writeBatch,list1, "two");
-        rocksDBSet.add(writeBatch,list1, "one");
-        rocksDBSet.add(writeBatch,list1, "nine");
+        rocksDBSet.addBatch(list1, writeBatch, "one");
+        rocksDBSet.addBatch(list1, writeBatch, "two");
+        rocksDBSet.addBatch(list1, writeBatch, "one");
+        rocksDBSet.addBatch(list1, writeBatch, "nine");
 
         String list2 = "list2";
-        rocksDBSet.add(writeBatch,list2, "aaa");
-        rocksDBSet.add(writeBatch,list2, "bbb");
-        rocksDBSet.add(writeBatch,list2, "ccc");
-        rocksDBSet.add(writeBatch,list2, "ddd");
+        rocksDBSet.addBatch(list2, writeBatch, "aaa");
+        rocksDBSet.addBatch(list2, writeBatch, "bbb");
+        rocksDBSet.addBatch(list2, writeBatch, "ccc");
+        rocksDBSet.addBatch(list2, writeBatch,"ddd");
 
         rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
 
@@ -90,16 +90,16 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void remove() throws Exception {
-        RocksDBMultiSet rocksDBSet = new RocksDBMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
         WriteBatch writeBatch = new WriteBatch();
 
         String setName = "set1";
-        rocksDBSet.add(writeBatch, setName, "one");
-        rocksDBSet.add(writeBatch, setName, "two");
-        rocksDBSet.add(writeBatch, setName, "one");
-        rocksDBSet.add(writeBatch, setName, "nine");
+        rocksDBSet.addBatch(setName, writeBatch, "one");
+        rocksDBSet.addBatch(setName, writeBatch, "two");
+        rocksDBSet.addBatch(setName, writeBatch, "one");
+        rocksDBSet.addBatch(setName, writeBatch, "nine");
 
-        rocksDBSet.remove(writeBatch, setName, "one");
+        rocksDBSet.removeBatch(setName, writeBatch,"one");
 
         rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
 
@@ -110,13 +110,13 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void remove_batch() throws Exception {
-        RocksDBMultiSet rocksDBSet = new RocksDBMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
         String setName = "set2";
         WriteBatch writeBatch = new WriteBatch();
-        rocksDBSet.add(writeBatch, setName, "one");
-        rocksDBSet.add(writeBatch, setName, "two");
-        rocksDBSet.add(writeBatch, setName, "one");
-        rocksDBSet.add(writeBatch, setName, "nine");
+        rocksDBSet.addBatch(setName, writeBatch, "one");
+        rocksDBSet.addBatch(setName, writeBatch, "two");
+        rocksDBSet.addBatch(setName, writeBatch, "one");
+        rocksDBSet.addBatch(setName, writeBatch, "nine");
 
         rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
 
@@ -129,7 +129,7 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void members() {
-        RocksDBMultiSet rocksDBSet = new RocksDBMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
         String setName = "set3";
         rocksDBSet.add(setName, "one");
         rocksDBSet.add(setName,"two");

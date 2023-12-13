@@ -16,7 +16,7 @@ class RocksDBListTest extends RocksDBBaseTest {
 
     @Test
     void add() {
-        var list = new RocksDBList(rocksDBConfig, "list-cf", "list1", String.class);
+        var list = new RocksList(rocksDBConfig, "list-cf", "list1", String.class);
         list.add("one");
         list.add("two");
         list.add("three");
@@ -26,7 +26,7 @@ class RocksDBListTest extends RocksDBBaseTest {
 
     @Test
     void get() {
-        var list = new RocksDBList(rocksDBConfig, "list-cf", "list1", String.class);
+        var list = new RocksList(rocksDBConfig, "list-cf", "list1", String.class);
         list.add("one");
         list.add("two");
         list.add("three");
@@ -41,7 +41,7 @@ class RocksDBListTest extends RocksDBBaseTest {
 
     @Test
     void get_objects() {
-        var list = new RocksDBList<A>(rocksDBConfig, "list-cf", "list1", A.class);
+        var list = new RocksList<A>(rocksDBConfig, "list-cf", "list1", A.class);
         list.add(new A(1));
         list.add(new A(2));
         list.add(new A(3));
@@ -57,13 +57,13 @@ class RocksDBListTest extends RocksDBBaseTest {
 
     @Test
     void get_objects_defaultCF() {
-        var list = new RocksDBList<A>(rocksDBConfig, "list1", A.class);
+        var list = new RocksList<A>(rocksDBConfig, "list1", A.class);
         list.add(new A(1));
         list.add(new A(2));
         list.add(new A(3));
         list.add(new A(4));
 
-        var list2 = new RocksDBList<String>(rocksDBConfig, "list2", String.class);
+        var list2 = new RocksList<String>(rocksDBConfig, "list2", String.class);
         list2.add("one");
         list2.add("two");
         list2.add("three");
@@ -82,7 +82,7 @@ class RocksDBListTest extends RocksDBBaseTest {
 
     @Test
     void get_objects_writeBatch() throws Exception {
-        var list = new RocksDBList<A>(rocksDBConfig, "list-cf", "list1", A.class);
+        var list = new RocksList<A>(rocksDBConfig, "list-cf", "list1", A.class);
         WriteBatch writeBatch = new WriteBatch();
         list.addBatch(writeBatch, new A(1), new A(2), new A(3), new A(4));
 

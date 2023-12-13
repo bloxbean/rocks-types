@@ -18,7 +18,7 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void addAndContains() {
-        RocksDBSet rocksDBSet = new RocksDBSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
         rocksDBSet.add("one");
         rocksDBSet.add("two");
         rocksDBSet.add("one");
@@ -33,12 +33,27 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void addAndContains_batch() throws Exception {
-        RocksDBSet rocksDBSet = new RocksDBSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
         WriteBatch writeBatch = new WriteBatch();
-        rocksDBSet.add(writeBatch, "one");
-        rocksDBSet.add(writeBatch, "two");
-        rocksDBSet.add(writeBatch, "one");
-        rocksDBSet.add(writeBatch, "nine");
+        rocksDBSet.addBatch(writeBatch, "one");
+        rocksDBSet.addBatch(writeBatch, "two");
+        rocksDBSet.addBatch(writeBatch, "one");
+        rocksDBSet.addBatch(writeBatch, "nine");
+
+        rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
+
+        assertTrue(rocksDBSet.contains("one"));
+        assertTrue(rocksDBSet.contains("two"));
+        assertFalse(rocksDBSet.contains("three"));
+        assertFalse(rocksDBSet.contains("four"));
+        assertTrue(rocksDBSet.contains("nine"));
+    }
+
+    @Test
+    void addAndContains_batch_merged() throws Exception {
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
+        WriteBatch writeBatch = new WriteBatch();
+        rocksDBSet.addBatch(writeBatch, "one", "two", "one", "nine");
 
         rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
 
@@ -51,7 +66,7 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void remove() {
-        RocksDBSet rocksDBSet = new RocksDBSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
         rocksDBSet.add("one");
         rocksDBSet.add("two");
         rocksDBSet.add("one");
@@ -66,12 +81,12 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void remove_batch() throws Exception {
-        RocksDBSet rocksDBSet = new RocksDBSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
         WriteBatch writeBatch = new WriteBatch();
-        rocksDBSet.add(writeBatch, "one");
-        rocksDBSet.add(writeBatch, "two");
-        rocksDBSet.add(writeBatch, "one");
-        rocksDBSet.add(writeBatch, "nine");
+        rocksDBSet.addBatch(writeBatch, "one");
+        rocksDBSet.addBatch(writeBatch, "two");
+        rocksDBSet.addBatch(writeBatch, "one");
+        rocksDBSet.addBatch(writeBatch, "nine");
 
         rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
 
@@ -83,8 +98,26 @@ class RocksDBSetTest extends RocksDBBaseTest {
     }
 
     @Test
+    void remove_batch_merged() throws Exception {
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "set1");
+        WriteBatch writeBatch = new WriteBatch();
+        rocksDBSet.addBatch(writeBatch, "one", "two", "one", "nine", "five");
+
+        rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
+
+        assertThat(rocksDBSet.members()).hasSize(4);
+
+        rocksDBSet.removeBatch(writeBatch, "one", "five");
+        rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
+
+        Set<String> members = rocksDBSet.members();
+        assertThat(members).hasSize(2);
+        assertThat(members).contains("two", "nine");
+    }
+
+    @Test
     void members() {
-        RocksDBSet rocksDBSet = new RocksDBSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
         rocksDBSet.add("one");
         rocksDBSet.add("two");
         rocksDBSet.add("one");

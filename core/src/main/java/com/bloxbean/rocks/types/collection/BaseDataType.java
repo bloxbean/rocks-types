@@ -1,20 +1,20 @@
 package com.bloxbean.rocks.types.collection;
 
-import com.bloxbean.rocks.types.collection.metadata.ListMetadata;
+import com.bloxbean.rocks.types.collection.metadata.TypeMetadata;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
 import com.bloxbean.rocks.types.serializer.Serializer;
 import lombok.SneakyThrows;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.RocksDB;
+import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 
 import java.util.Optional;
 
-public abstract class BaseDataType<T> {
-    protected final static String PREFIX = ":";
+abstract class BaseDataType<T> {
+    protected final static String PREFIX = "|";
     protected final RocksDB db;
     protected final String name;
-    protected final byte[] metadataKeyName;
     protected final ColumnFamilyHandle columnFamilyHandle;
     protected final Serializer keySerializer;
     protected final Serializer valueSerializer;
@@ -29,7 +29,6 @@ public abstract class BaseDataType<T> {
         this.name = name;
         this.keySerializer = rocksDBConfig.getKeySerializer();
         this.valueSerializer = rocksDBConfig.getValueSerializer();
-        this.metadataKeyName = keySerializer.serialize(name);
         if (columnFamily != null)
             this.columnFamilyHandle = rocksDBConfig.getColumnFamilyHandle(columnFamily);
         else
@@ -37,23 +36,8 @@ public abstract class BaseDataType<T> {
         this.valueType = valueType;
     }
 
-
-   // protected abstract RocksDB getDb();
-    //protected abstract ColumnFamilyHandle getColumnFamilyHandle();
-   // protected abstract byte[] getMetadataKeyName();
-
-    @SneakyThrows
-    protected Optional<ListMetadata> getMetadata() {
-        var metadataValueBytes = get(metadataKeyName);
-        if (metadataValueBytes == null || metadataValueBytes.length == 0) {
-            var listMetadata = new ListMetadata();
-            listMetadata.setSize(0);
-            listMetadata.setVersion(System.currentTimeMillis());
-            return Optional.of(listMetadata);
-        } else {
-            return Optional.of(valueSerializer.deserialize(metadataValueBytes, ListMetadata.class));
-        }
-    }
+    protected abstract Optional<? extends TypeMetadata> createMetadata(String ns);
+    protected abstract Optional<? extends TypeMetadata> getMetadata(String ns);
 
     protected void write(WriteBatch writeBatch, byte[] key, byte[] value) {
         if (writeBatch != null) {
@@ -73,6 +57,15 @@ public abstract class BaseDataType<T> {
     }
 
     @SneakyThrows
+    protected void deleteBatch(WriteBatch batch, byte[] key) {
+        if (columnFamilyHandle != null) {
+            batch.delete(columnFamilyHandle, key);
+        } else {
+            batch.delete(key);
+        }
+    }
+
+    @SneakyThrows
     protected void put(byte[] key, byte[] value) {
         if (columnFamilyHandle != null) {
             db.put(columnFamilyHandle, key, value);
@@ -87,6 +80,23 @@ public abstract class BaseDataType<T> {
             return db.get(columnFamilyHandle, key);
         } else {
             return db.get(key);
+        }
+    }
+
+    @SneakyThrows
+    protected void delete(byte[] key) {
+        if (columnFamilyHandle != null) {
+            db.delete(columnFamilyHandle, key);
+        } else {
+            db.delete(key);
+        }
+    }
+
+    protected RocksIterator iterator() {
+        if (columnFamilyHandle != null) {
+            return db.newIterator(columnFamilyHandle);
+        } else {
+            return db.newIterator();
         }
     }
 }

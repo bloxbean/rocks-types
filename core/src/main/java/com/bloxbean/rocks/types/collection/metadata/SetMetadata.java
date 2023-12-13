@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class SetMetadata extends TypeMetadata {
-    private int size;
+    private long size;
 
     @Override
     public DataType getType() {
