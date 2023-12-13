@@ -1,0 +1,17 @@
+dependencies {
+    api libs.slf4j.api
+
+    implementation libs.rocksdb
+    implementation libs.messagepack.jackson
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Rocks Types Collection'
+                description = 'Rocks Types Collection - Collection data types implementations built on RocksDB'
+            }
+        }
+    }
+}
