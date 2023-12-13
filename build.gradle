@@ -40,7 +40,7 @@ publishing {
             from components.java
             pom {
                 name = 'rocks-types'
-                description = 'Rocks-Types : Data types implementation built on RocksDB'
+                description = 'Rocks-Types: Data Type Implementations Built on RocksDB'
                 url = 'https://github.com/bloxbean/rocks-types'
                 licenses {
                     license {
@@ -101,7 +101,6 @@ subprojects {
         }
     }
 
-    //Jars are with jadex prefix
     archivesBaseName = 'rocks-types-' + project.name
 
     dependencies {

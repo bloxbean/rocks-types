@@ -9,8 +9,8 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             pom {
-                name = 'Rocks Types Collection'
-                description = 'Rocks Types Collection - Collection data types implementations built on RocksDB'
+                name = 'Rocks Types Core'
+                description = 'Rocks Types Core - Collection Data Type Implementations Built on RocksDB'
             }
         }
     }
