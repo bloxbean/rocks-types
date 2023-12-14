@@ -3,7 +3,8 @@ package com.bloxbean.rocks.types.collection.metadata;
 public enum DataType {
     LIST((short) 0),
     SET((short) 1),
-    MAP((short) 2);
+    MAP((short) 2),
+    ZSET((short) 3);
 
     private final short value;
     DataType(short value) {
