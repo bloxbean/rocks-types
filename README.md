@@ -1,3 +1,65 @@
 # rocks-types
 
 Data Type Implementations Built on RocksDB
+
+This library provides some basic data types implemented on top of RocksDB. The main goal is to provide a simple and efficient
+way to store and retrieve data from RocksDB.
+
+<b>This library is still in early experimental stage. </b>
+
+## Supported Types
+
+- [x] **List (RocksList) :** A basic implementation for ordered list where you can add and retrieve items by index.
+- [x] **MultiList (RocksMultiList) :** A basic implementation for ordered list where you can add and retrieve items by index. It supports multiple lists under the same name, but different namespaces.
+- [x] **Set (RocksSet) :** A basic implementation for set where you can add, remove and check if an item exists.
+- [x] **MultiSet (RocksMultiSet) :** A basic implementation for set where you can add, remove and check if an item exists. It supports multiple sets under the same name, but different namespaces.
+- [x] **ZSet (RocksZSet) :** A basic implementation for sorted set where you can add, remove and check if an item exists. You can find score of an item and items within a score range.
+- [x] **MultiZSet (RocksMultiZSet) :** A basic implementation for sorted set where you can add, remove and check if an item exists. You can find score of an item and items within a score range. It supports multiple sorted sets under the same name, but different namespaces.
+- [ ] **Map (RocksMap) :** Not implemented yet
+
+## Pre-requisites
+
+- Java 21+
+
+## Usage
+
+Please check the test cases for usage examples.
+
+## Dependencies
+
+```xml
+    <dependency>
+        <groupId>com.bloxbean</groupId>
+        <artifactId>rocks-types</artifactId>
+        <version>{version}</version>
+    </dependency>
+```
+
+## SNAPSHOT Dependency
+
+Add Snapshot repository
+
+```xml
+    <repositories>
+        <repository>
+            <id>snapshots-repo</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+```
+
+## Build
+
+```
+./gradlew clean build
+```
+
+## License
+
+MIT
