@@ -5,7 +5,7 @@ Data Type Implementations Built on RocksDB
 This library provides some basic data types implemented on top of RocksDB. The main goal is to provide a simple and efficient
 way to store and retrieve data from RocksDB.
 
-<b>This library is still in early experimental stage. </b>
+<b>This library is still in experimental stage. </b>
 
 ## Supported Types
 
