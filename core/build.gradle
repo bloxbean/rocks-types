@@ -1,7 +1,7 @@
 dependencies {
     api libs.slf4j.api
 
-    implementation libs.rocksdb
+    api libs.rocksdb
     implementation libs.messagepack.jackson
 }
 
