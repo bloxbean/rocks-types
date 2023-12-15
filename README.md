@@ -23,7 +23,7 @@ way to store and retrieve data from RocksDB.
 
 ## Usage
 
-Please check the test cases for usage examples.
+Please check the test cases for usage [examples](https://github.com/bloxbean/rocks-types/tree/main/core/src/test/java/com/bloxbean/rocks/types).
 
 ## Dependencies
 
