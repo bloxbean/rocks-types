@@ -9,7 +9,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-class RocksDBSetTest extends RocksDBBaseTest {
+class RocksSetTest extends RocksBaseTest {
 
     @Override
     public String getColumnFamilies() {
@@ -18,7 +18,7 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void addAndContains() {
-        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1", String.class);
         rocksDBSet.add("one");
         rocksDBSet.add("two");
         rocksDBSet.add("one");
@@ -33,7 +33,7 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void addAndContains_batch() throws Exception {
-        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1", String.class);
         WriteBatch writeBatch = new WriteBatch();
         rocksDBSet.addBatch(writeBatch, "one");
         rocksDBSet.addBatch(writeBatch, "two");
@@ -51,7 +51,7 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void addAndContains_batch_merged() throws Exception {
-        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1", String.class);
         WriteBatch writeBatch = new WriteBatch();
         rocksDBSet.addBatch(writeBatch, "one", "two", "one", "nine");
 
@@ -66,7 +66,7 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void remove() {
-        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1", String.class);
         rocksDBSet.add("one");
         rocksDBSet.add("two");
         rocksDBSet.add("one");
@@ -81,7 +81,7 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void remove_batch() throws Exception {
-        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1", String.class);
         WriteBatch writeBatch = new WriteBatch();
         rocksDBSet.addBatch(writeBatch, "one");
         rocksDBSet.addBatch(writeBatch, "two");
@@ -99,7 +99,7 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void remove_batch_merged() throws Exception {
-        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "set1", String.class);
         WriteBatch writeBatch = new WriteBatch();
         rocksDBSet.addBatch(writeBatch, "one", "two", "one", "nine", "five");
 
@@ -117,7 +117,7 @@ class RocksDBSetTest extends RocksDBBaseTest {
 
     @Test
     void members() {
-        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1");
+        RocksSet rocksDBSet = new RocksSet(rocksDBConfig, "list1", "set1", String.class);
         rocksDBSet.add("one");
         rocksDBSet.add("two");
         rocksDBSet.add("one");

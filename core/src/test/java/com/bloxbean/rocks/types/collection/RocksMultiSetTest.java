@@ -9,7 +9,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-class RocksDBMultiSetTest extends RocksDBBaseTest {
+class RocksMultiSetTest extends RocksBaseTest {
 
     @Override
     public String getColumnFamilies() {
@@ -18,7 +18,7 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void addAndContains() {
-        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
         String list1 = "list1";
         rocksDBSet.add(list1, "one");
         rocksDBSet.add(list1, "two");
@@ -52,7 +52,7 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void addAndContains_batch() throws Exception {
-        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
         WriteBatch writeBatch = new WriteBatch();
 
         String list1 = "list1";
@@ -90,7 +90,7 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void remove() throws Exception {
-        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
         WriteBatch writeBatch = new WriteBatch();
 
         String setName = "set1";
@@ -110,7 +110,7 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void remove_batch() throws Exception {
-        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
         String setName = "set2";
         WriteBatch writeBatch = new WriteBatch();
         rocksDBSet.addBatch(setName, writeBatch, "one");
@@ -129,7 +129,7 @@ class RocksDBMultiSetTest extends RocksDBBaseTest {
 
     @Test
     void members() {
-        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf");
+        RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
         String setName = "set3";
         rocksDBSet.add(setName, "one");
         rocksDBSet.add(setName,"two");

@@ -1,6 +1,7 @@
 package com.bloxbean.rocks.types.collection;
 
 import com.bloxbean.rocks.types.collection.metadata.ListMetadata;
+import com.bloxbean.rocks.types.common.KeyBuilder;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -8,6 +9,11 @@ import org.rocksdb.WriteBatch;
 
 import java.util.Optional;
 
+/**
+ * Provides List functionality on top of RocksDB. This is a multi list where you can have multiple lists
+ * under the same name. Each list is identified by a namespace.
+ * @param <T>
+ */
 public class RocksMultiList<T> extends BaseDataType<T> {
 
     public RocksMultiList(RocksDBConfig rocksDBConfig, String columnFamily, String name, Class<T> valueType) {
@@ -32,7 +38,7 @@ public class RocksMultiList<T> extends BaseDataType<T> {
     @SneakyThrows
     private void add(String ns, WriteBatch writeBatch, @NonNull ListMetadata metadata, T value) {
         long index = metadata.getSize(); // Get the current length of the list
-        byte[] key = keySerializer.serialize(getSubKey(metadata, ns, index));
+        byte[] key = getSubKey(metadata, ns, index);
         write(writeBatch, key, valueSerializer.serialize(value));
         updateMetadata(writeBatch, metadata, ns, key); // Increment the length
     }
@@ -41,7 +47,7 @@ public class RocksMultiList<T> extends BaseDataType<T> {
     public T get(String ns, long index) {
         var metadataOpt = getMetadata(ns).orElseThrow();
         var currentMetadata = metadataOpt;
-        byte[] value = get(keySerializer.serialize(getSubKey(currentMetadata, ns, index)));
+        byte[] value = get(getSubKey(currentMetadata, ns, index));
         return value != null ? valueSerializer.deserialize(value, valueType) : null;
     }
 
@@ -92,16 +98,24 @@ public class RocksMultiList<T> extends BaseDataType<T> {
 
     protected byte[] getMetadataKey(String ns) {
         if (ns != null)
-            return keySerializer.serialize(name + PREFIX + ns);
+            return new KeyBuilder(name, ns)
+                    .build();
         else
-            return keySerializer.serialize(name);
+            return new KeyBuilder(name)
+                    .build();
     }
 
-    private String getSubKey(ListMetadata currentMetadata, String ns, long index) {
+    private byte[] getSubKey(ListMetadata currentMetadata, String ns, long index) {
         if (ns != null)
-            return name + PREFIX + ns + PREFIX + currentMetadata.getVersion() + PREFIX + index;
+            return new KeyBuilder(name, ns)
+                    .append(currentMetadata.getVersion())
+                    .append(index)
+                    .build();
         else
-            return name + PREFIX + currentMetadata.getVersion() + PREFIX + index;
+            return new KeyBuilder(name)
+                    .append(currentMetadata.getVersion())
+                    .append(index)
+                    .build();
     }
 }
 

@@ -11,12 +11,14 @@ import org.rocksdb.WriteBatch;
 
 import java.util.Optional;
 
+/**
+ * Base class for all collection types
+ * @param <T>
+ */
 abstract class BaseDataType<T> {
-    protected final static String PREFIX = "|";
     protected final RocksDB db;
     protected final String name;
     protected final ColumnFamilyHandle columnFamilyHandle;
-    protected final Serializer keySerializer;
     protected final Serializer valueSerializer;
     protected final Class<T> valueType;
 
@@ -27,7 +29,6 @@ abstract class BaseDataType<T> {
     public BaseDataType(RocksDBConfig rocksDBConfig, String columnFamily, String name, Class<T> valueType) {
         this.db = rocksDBConfig.getRocksDB();
         this.name = name;
-        this.keySerializer = rocksDBConfig.getKeySerializer();
         this.valueSerializer = rocksDBConfig.getValueSerializer();
         if (columnFamily != null)
             this.columnFamilyHandle = rocksDBConfig.getColumnFamilyHandle(columnFamily);

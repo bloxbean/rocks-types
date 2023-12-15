@@ -1,6 +1,7 @@
 package com.bloxbean.rocks.types.collection;
 
 import com.bloxbean.rocks.types.collection.metadata.SetMetadata;
+import com.bloxbean.rocks.types.common.KeyBuilder;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
 import lombok.SneakyThrows;
 import org.rocksdb.RocksIterator;
@@ -11,71 +12,77 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class RocksMultiSet extends BaseDataType {
+/**
+ * Provides Set functionality on top of RocksDB. This is a multi set where you can have multiple sets
+ * under the same name. Each set is identified by a namespace.
+ */
+public class RocksMultiSet<T> extends BaseDataType<T> {
 
-    public RocksMultiSet(RocksDBConfig rocksDBConfig, String columnFamily, String name) {
-        super(rocksDBConfig, columnFamily, name, null);
+    public RocksMultiSet(RocksDBConfig rocksDBConfig, String columnFamily, String name, Class<T> valueType) {
+        super(rocksDBConfig, columnFamily, name, valueType);
     }
 
-    public RocksMultiSet(RocksDBConfig rocksDBConfig, String name) {
-        super(rocksDBConfig, null, name, null);
+    public RocksMultiSet(RocksDBConfig rocksDBConfig, String name, Class<T> valueType) {
+        super(rocksDBConfig, null, name, valueType);
     }
 
     @SneakyThrows
-    public void add(String ns, String value) {
+    public void add(String ns, T member) {
         var metadata = createMetadata(ns).orElseThrow();
-        add(ns, null, metadata, value);
+        add(ns, null, metadata, member);
     }
 
-    public void addBatch(String ns, WriteBatch writeBatch, String... value) {
+    public void addBatch(String ns, WriteBatch writeBatch, T... members) {
         var metadata = createMetadata(ns).orElseThrow();
-        for (var val : value) {
+        for (var val : members) {
             add(ns, writeBatch, metadata, val);
         }
     }
 
-    private void add(String ns, WriteBatch writeBatch, SetMetadata metadata, String value) {
-        write(writeBatch, keySerializer.serialize(getSubKey(metadata, ns, value)), new byte[0]);
+    private void add(String ns, WriteBatch writeBatch, SetMetadata metadata, T member) {
+        write(writeBatch, getSubKey(metadata, ns, member), new byte[0]);
     }
 
     @SneakyThrows
-    public boolean contains(String ns, String value) {
+    public boolean contains(String ns, T member) {
         var metadata = getMetadata(ns).orElseThrow();
-        byte[] val = get(keySerializer.serialize(getSubKey(metadata, ns, value)));
+        byte[] val = get(getSubKey(metadata, ns, member));
         return val != null;
     }
 
     @SneakyThrows
-    public void remove(String ns, String value) {
+    public void remove(String ns, T member) {
         var metadata = getMetadata(ns).orElseThrow();
         WriteBatch writeBatch = new WriteBatch();
-        delete(ns, writeBatch, metadata, value);
+        delete(ns, writeBatch, metadata, member);
         db.write(new WriteOptions(), writeBatch);
     }
 
     @SneakyThrows
-    public void removeBatch(String ns, WriteBatch writeBatch, String... values) {
+    public void removeBatch(String ns, WriteBatch writeBatch, T... values) {
         var metadata = getMetadata(ns).orElseThrow();
         for (var value : values)
             delete(ns, writeBatch, metadata, value);
     }
 
-    private void delete(String ns, WriteBatch writeBatch, SetMetadata metadata, String value) {
-        deleteBatch(writeBatch, keySerializer.serialize(getSubKey(metadata, ns, value)));
+    private void delete(String ns, WriteBatch writeBatch, SetMetadata metadata, T value) {
+        deleteBatch(writeBatch, getSubKey(metadata, ns, value));
     }
 
     @SneakyThrows
-    public Set<String> members(String ns) {
+    public Set<T> members(String ns) {
         var metadata = getMetadata(ns).orElseThrow();
-        Set<String> members = new HashSet<>();
-        String prefix = getSubKey(metadata, ns, "");
+        Set<T> members = new HashSet<>();
+        byte[] prefix = getSubKey(metadata, ns, null);
         try (RocksIterator iterator = iterator()) {
-            for (iterator.seek(keySerializer.serialize(prefix)); iterator.isValid(); iterator.next()) {
-                String key = new String(iterator.key());
-                if (!key.startsWith(prefix)) {
+            for (iterator.seek(prefix); iterator.isValid(); iterator.next()) {
+                byte[] key = iterator.key();
+                if (!KeyBuilder.hasPrefix(key, prefix)) {
                     break; // Break if the key no longer starts with the prefix
                 }
-                String member = key.substring(prefix.length());
+
+                var memberBytes = KeyBuilder.removePrefix(key, prefix);
+                T member = valueSerializer.deserialize(memberBytes, valueType);
                 members.add(member);
             }
         }
@@ -109,16 +116,24 @@ public class RocksMultiSet extends BaseDataType {
 
     protected byte[] getMetadataKey(String ns) {
         if (ns != null)
-            return keySerializer.serialize(name + PREFIX + ns);
+            return new KeyBuilder(name, ns)
+                    .build();
         else
-            return keySerializer.serialize(name);
+            return new KeyBuilder(name)
+                    .build();
     }
 
-    private String getSubKey(SetMetadata metadata, String ns, String value) {
+    private byte[] getSubKey(SetMetadata metadata, String ns, T member) {
         if (ns != null)
-            return name + PREFIX + ns + PREFIX + metadata.getVersion() + PREFIX + value;
+            return new KeyBuilder(name, ns)
+                    .append(metadata.getVersion())
+                    .append(member != null? valueSerializer.serialize(member) : null)
+                    .build();
         else
-            return name + PREFIX + metadata.getVersion() + PREFIX + value;
+            return new KeyBuilder(name)
+                    .append(metadata.getVersion())
+                    .append(member != null? valueSerializer.serialize(member) : null)
+                    .build();
     }
 }
 

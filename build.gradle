@@ -198,8 +198,8 @@ subprojects {
                     }
                     developers {
                         developer {
-                            id = 'stikkos'
-                            name = 'Stik'
+                            id = 'satran004'
+                            name = 'Satya'
                         }
                     }
                     scm {

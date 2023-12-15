@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import java.io.File;
 
-public class RocksDBBaseTest {
+public class RocksBaseTest {
     public static String tmpdir = System.getProperty("java.io.tmpdir");
     public RocksDBConfig rocksDBConfig;
     public RocksDBProperties rocksDBProperties;

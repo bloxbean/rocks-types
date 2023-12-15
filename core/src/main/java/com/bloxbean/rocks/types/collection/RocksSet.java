@@ -5,37 +5,41 @@ import org.rocksdb.WriteBatch;
 
 import java.util.Set;
 
-public class RocksSet extends RocksMultiSet {
+/**
+ * Provides Set functionality on top of RocksDB
+ * @param <T>
+ */
+public class RocksSet<T> extends RocksMultiSet<T> {
 
-    public RocksSet(RocksDBConfig rocksDBConfig, String columnFamily, String name) {
-        super(rocksDBConfig, columnFamily, name);
+    public RocksSet(RocksDBConfig rocksDBConfig, String columnFamily, String name, Class<T> valueType) {
+        super(rocksDBConfig, columnFamily, name, valueType);
     }
 
-    public RocksSet(RocksDBConfig rocksDBConfig, String name) {
-        super(rocksDBConfig, null, name);
+    public RocksSet(RocksDBConfig rocksDBConfig, String name, Class<T> valueType) {
+        super(rocksDBConfig, null, name, valueType);
     }
 
-    public void add(String value) {
+    public void add(T value) {
         add(null, value);
     }
 
-    public void addBatch(WriteBatch writeBatch, String... value) {
+    public void addBatch(WriteBatch writeBatch, T... value) {
         addBatch(null, writeBatch, value);
     }
 
-    public boolean contains(String value) {
+    public boolean contains(T value) {
        return contains(null, value);
     }
 
-    public void remove(String value) {
+    public void remove(T value) {
         remove(null, value);
     }
 
-    public void removeBatch(WriteBatch writeBatch, String... values) {
+    public void removeBatch(WriteBatch writeBatch, T... values) {
         removeBatch(null, writeBatch, values);
     }
 
-    public Set<String> members() {
+    public Set<T> members() {
         return members(null);
     }
 

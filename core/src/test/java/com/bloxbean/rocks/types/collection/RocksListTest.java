@@ -7,7 +7,7 @@ import org.rocksdb.WriteOptions;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class RocksDBListTest extends RocksDBBaseTest {
+class RocksListTest extends RocksBaseTest {
 
     @Override
     public String getColumnFamilies() {

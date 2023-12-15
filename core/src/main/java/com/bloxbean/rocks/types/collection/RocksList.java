@@ -4,6 +4,10 @@ import com.bloxbean.rocks.types.config.RocksDBConfig;
 import lombok.SneakyThrows;
 import org.rocksdb.WriteBatch;
 
+/**
+ * Provides List functionality on top of RocksDB
+ * @param <T>
+ */
 public class RocksList<T> extends RocksMultiList<T> {
 
     public RocksList(RocksDBConfig rocksDBConfig, String columnFamily, String name, Class<T> valueType) {
