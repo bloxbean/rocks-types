@@ -45,9 +45,11 @@ public class RocksMultiList<T> extends BaseDataType<T> {
 
     @SneakyThrows
     public T get(String ns, long index) {
-        var metadataOpt = getMetadata(ns).orElseThrow();
-        var currentMetadata = metadataOpt;
-        byte[] value = get(getSubKey(currentMetadata, ns, index));
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return null;
+
+        byte[] value = get(getSubKey(metadata.get(), ns, index));
         return value != null ? valueSerializer.deserialize(value, valueType) : null;
     }
 

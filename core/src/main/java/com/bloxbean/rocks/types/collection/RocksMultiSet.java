@@ -8,6 +8,7 @@ import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -45,24 +46,33 @@ public class RocksMultiSet<T> extends BaseDataType<T> {
 
     @SneakyThrows
     public boolean contains(String ns, T member) {
-        var metadata = getMetadata(ns).orElseThrow();
-        byte[] val = get(getSubKey(metadata, ns, member));
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return false;
+
+        byte[] val = get(getSubKey(metadata.get(), ns, member));
         return val != null;
     }
 
     @SneakyThrows
     public void remove(String ns, T member) {
-        var metadata = getMetadata(ns).orElseThrow();
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return;
+
         WriteBatch writeBatch = new WriteBatch();
-        delete(ns, writeBatch, metadata, member);
+        delete(ns, writeBatch, metadata.get(), member);
         db.write(new WriteOptions(), writeBatch);
     }
 
     @SneakyThrows
     public void removeBatch(String ns, WriteBatch writeBatch, T... values) {
-        var metadata = getMetadata(ns).orElseThrow();
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return;
+
         for (var value : values)
-            delete(ns, writeBatch, metadata, value);
+            delete(ns, writeBatch, metadata.get(), value);
     }
 
     private void delete(String ns, WriteBatch writeBatch, SetMetadata metadata, T value) {
@@ -71,9 +81,12 @@ public class RocksMultiSet<T> extends BaseDataType<T> {
 
     @SneakyThrows
     public Set<T> members(String ns) {
-        var metadata = getMetadata(ns).orElseThrow();
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return Collections.emptySet();
+
         Set<T> members = new HashSet<>();
-        byte[] prefix = getSubKey(metadata, ns, null);
+        byte[] prefix = getSubKey(metadata.get(), ns, null);
         try (RocksIterator iterator = iterator()) {
             for (iterator.seek(prefix); iterator.isValid(); iterator.next()) {
                 byte[] key = iterator.key();

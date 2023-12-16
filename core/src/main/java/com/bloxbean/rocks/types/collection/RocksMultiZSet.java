@@ -50,8 +50,11 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     }
 
     public Optional<Long> getScore(String ns, T member) {
-        var metadata = getMetadata(ns).orElseThrow();
-        byte[] val = get(getMemberSubKey(metadata, ns, member));
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return Optional.empty();
+
+        byte[] val = get(getMemberSubKey(metadata.get(), ns, member));
         if (val == null)
             return Optional.empty();
         else
@@ -60,24 +63,31 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
 
     @SneakyThrows
     public boolean contains(String ns, T member) {
-        var metadata = getMetadata(ns).orElseThrow();
-        byte[] val = get(getMemberSubKey(metadata, ns, member));
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return false;
+
+        byte[] val = get(getMemberSubKey(metadata.get(), ns, member));
         return val != null;
     }
 
     @SneakyThrows
     public void remove(String ns, T member) {
-        var metadata = getMetadata(ns).orElseThrow();
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return;
         WriteBatch writeBatch = new WriteBatch();
-        delete(ns, writeBatch, metadata, member);
+        delete(ns, writeBatch, metadata.get(), member);
         db.write(new WriteOptions(), writeBatch);
     }
 
     @SneakyThrows
     public void removeBatch(String ns, WriteBatch writeBatch, T... member) {
-        var metadata = getMetadata(ns).orElseThrow();
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return;
         for (var value : member)
-            delete(ns, writeBatch, metadata, value);
+            delete(ns, writeBatch, metadata.get(), value);
     }
 
     private void delete(String ns, WriteBatch writeBatch, SetMetadata metadata, T member) {
@@ -90,9 +100,12 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
 
     @SneakyThrows
     public Set<T> members(String ns) {
-        var metadata = getMetadata(ns).orElseThrow();
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return Collections.emptySet();
+
         Set<T> members = new HashSet<>();
-        byte[] prefix = getMemberSubKey(metadata, ns, null);
+        byte[] prefix = getMemberSubKey(metadata.get(), ns, null);
         try (RocksIterator iterator = iterator()) {
             for (iterator.seek(prefix); iterator.isValid(); iterator.next()) {
                 byte[] key = iterator.key();
@@ -111,9 +124,12 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
 
     @SneakyThrows
     public Set<Tuple<T, Long>> membersWithScores(String ns) {
-        var metadata = getMetadata(ns).orElseThrow();
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return Collections.emptySet();
+
         Set<Tuple<T, Long>> members = new HashSet<>();
-        byte[] prefix = getMemberSubKey(metadata, ns, null);
+        byte[] prefix = getMemberSubKey(metadata.get(), ns, null);
         try (RocksIterator iterator = iterator()) {
             for (iterator.seek(prefix); iterator.isValid(); iterator.next()) {
                 byte[] key = iterator.key();
@@ -132,10 +148,12 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
 
     public List<Tuple<T, Long>> membersInRange(String ns, long beginningScore, long endScore) {
         //Iterate over the range of scores
-        var metadata = getMetadata(ns).orElseThrow();
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return Collections.emptyList();
         List<Tuple<T, Long>> members = new ArrayList<>();
 
-        byte[] prefixWithoutScore = getScoreSubKeyPrefix(metadata, ns);
+        byte[] prefixWithoutScore = getScoreSubKeyPrefix(metadata.get(), ns);
         byte[] prefix = KeyBuilder.appendToKey(prefixWithoutScore, longToBytes(beginningScore));
 
         try (RocksIterator iterator = iterator()) {
