@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -124,6 +125,23 @@ class RocksSetTest extends RocksBaseTest {
         rocksDBSet.add("nine");
 
         Set<String> members = rocksDBSet.members();
+        assertEquals(3, members.size());
+        assertThat(members).contains("one", "two", "nine");
+    }
+
+    @Test
+    void members_iterator() {
+        var rocksDBSet = new RocksSet<String>(rocksDBConfig, "list1", "set1", String.class);
+        rocksDBSet.add("one");
+        rocksDBSet.add("two");
+        rocksDBSet.add("one");
+        rocksDBSet.add("nine");
+
+        var membersIterator = rocksDBSet.membersIterator();
+        var members = new ArrayList<String>();
+        while (membersIterator.hasNext()) {
+            members.add(membersIterator.next());
+        }
         assertEquals(3, members.size());
         assertThat(members).contains("one", "two", "nine");
     }

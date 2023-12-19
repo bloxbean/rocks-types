@@ -1,5 +1,6 @@
 package com.bloxbean.rocks.types.collection;
 
+import com.bloxbean.rocks.types.collection.util.ValueIterator;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
 import org.rocksdb.WriteBatch;
 
@@ -41,6 +42,10 @@ public class RocksSet<T> extends RocksMultiSet<T> {
 
     public Set<T> members() {
         return members(null);
+    }
+
+    public ValueIterator<T> membersIterator() {
+        return membersIterator(null);
     }
 
 }

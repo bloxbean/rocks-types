@@ -1,17 +1,17 @@
 package com.bloxbean.rocks.types.collection;
 
 import com.bloxbean.rocks.types.collection.metadata.SetMetadata;
+import com.bloxbean.rocks.types.collection.util.EmptyIterator;
+import com.bloxbean.rocks.types.collection.util.ValueIterator;
 import com.bloxbean.rocks.types.common.KeyBuilder;
+import com.bloxbean.rocks.types.collection.util.SetIterator;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
 import lombok.SneakyThrows;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Provides Set functionality on top of RocksDB. This is a multi set where you can have multiple sets
@@ -100,6 +100,16 @@ public class RocksMultiSet<T> extends BaseDataType<T> {
             }
         }
         return members;
+    }
+
+    @SneakyThrows
+    public ValueIterator<T> membersIterator(String ns) {
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty()) {
+            return new EmptyIterator<>();
+        }
+        byte[] prefix = getSubKey(metadata.get(), ns, null);
+        return new SetIterator<>(iterator(), prefix, valueSerializer, valueType);
     }
 
     @SneakyThrows

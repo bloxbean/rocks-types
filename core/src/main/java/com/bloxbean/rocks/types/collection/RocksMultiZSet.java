@@ -1,6 +1,10 @@
 package com.bloxbean.rocks.types.collection;
 
 import com.bloxbean.rocks.types.collection.metadata.SetMetadata;
+import com.bloxbean.rocks.types.collection.util.EmptyIterator;
+import com.bloxbean.rocks.types.collection.util.ValueIterator;
+import com.bloxbean.rocks.types.collection.util.ZSetMembersIterator;
+import com.bloxbean.rocks.types.collection.util.ZSetRangeIterator;
 import com.bloxbean.rocks.types.common.KeyBuilder;
 import com.bloxbean.rocks.types.common.Tuple;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
@@ -17,6 +21,7 @@ import static com.bloxbean.rocks.types.common.KeyBuilder.*;
 /**
  * Provides ZSet functionality on top of RocksDB. ZSet is a sorted set where each member is associated with a score.
  * It supports multiple lists under the same name with different namespaces.
+ *
  * @param <T>
  */
 public class RocksMultiZSet<T> extends BaseDataType<T> {
@@ -140,7 +145,8 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
                 var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefix);
                 var parts = KeyBuilder.parts(keyWithoutPrefix);
                 T member = valueSerializer.deserialize(parts.get(0), valueType);
-                getScore(ns, member).ifPresent(score -> members.add(new Tuple<>(member, score)));
+                var score = valueSerializer.deserialize(iterator.value(), Long.class);
+                members.add(new Tuple<>(member, score));
             }
         }
         return members;
@@ -177,6 +183,24 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
         return members;
     }
 
+    public ValueIterator<Tuple<T, Long>> membersWithScoresIterator(String ns) {
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty()) {
+            return new EmptyIterator<>();
+        }
+        byte[] prefix = getMemberSubKey(metadata.get(), ns, null);
+        return new ZSetMembersIterator<>(iterator(), prefix, valueSerializer, valueType);
+    }
+
+    public ValueIterator<Tuple<T, Long>> membersInRangeIterator(String ns, long beginningScore, long endScore) {
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty()) {
+            return new EmptyIterator<>();
+        }
+        byte[] prefixWithoutScore = getScoreSubKeyPrefix(metadata.get(), ns);
+        return new ZSetRangeIterator(iterator(), prefixWithoutScore, beginningScore, endScore,
+                valueSerializer, valueType);
+    }
 
     @SneakyThrows
     protected Optional<SetMetadata> getMetadata(String ns) {
@@ -217,13 +241,13 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
             return new KeyBuilder(name, ns)
                     .append(metadata.getVersion())
                     .append("members")
-                    .append(member != null? valueSerializer.serialize(member) : null)
+                    .append(member != null ? valueSerializer.serialize(member) : null)
                     .build();
         else
             return new KeyBuilder(name)
                     .append(metadata.getVersion())
                     .append("members")
-                    .append(member != null? valueSerializer.serialize(member) : null)
+                    .append(member != null ? valueSerializer.serialize(member) : null)
                     .build();
     }
 

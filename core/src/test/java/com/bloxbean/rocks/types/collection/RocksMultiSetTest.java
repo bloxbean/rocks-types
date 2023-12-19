@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -139,5 +140,50 @@ class RocksMultiSetTest extends RocksBaseTest {
         Set<String> members = rocksDBSet.members(setName);
         assertEquals(3, members.size());
         assertThat(members).contains("one", "two", "nine");
+    }
+
+    @Test
+    void membersIterable() throws Exception {
+        RocksMultiSet<String> rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
+
+        String setName = "set1";
+        rocksDBSet.add(setName, "one");
+        rocksDBSet.add(setName,"two");
+        rocksDBSet.add(setName,"one");
+        rocksDBSet.add(setName,"nine");
+        rocksDBSet.add(setName,"ten");
+        rocksDBSet.add(setName,"eleven");
+        rocksDBSet.add(setName,"twelve");
+
+        String setName2 = "set2";
+        rocksDBSet.add(setName2, "13");
+        rocksDBSet.add(setName2,"14");
+        rocksDBSet.add(setName2,"15");
+
+        var iterator = rocksDBSet.membersIterator(setName);
+        var members1 = new ArrayList<>();
+        while(iterator.hasNext()) {
+            var item = iterator.next();
+            System.out.println(item);
+            members1.add(item);
+        }
+
+        iterator.close();
+
+        iterator = rocksDBSet.membersIterator(setName2);
+        var members2 = new ArrayList<>();
+        while(iterator.hasNext()) {
+            var item = iterator.next();
+            System.out.println(item);
+            members2.add(item);
+        }
+
+        iterator.close();
+
+        assertThat(members1).hasSize(6);
+        assertThat(members1).contains("one", "two", "nine", "ten", "eleven", "twelve");
+        assertThat(members2).hasSize(3);
+        assertThat(members2).contains("13", "14", "15");
+
     }
 }
