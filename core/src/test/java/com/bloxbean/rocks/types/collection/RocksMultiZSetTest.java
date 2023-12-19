@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -106,6 +107,7 @@ class RocksMultiZSetTest extends RocksBaseTest {
         rocksDBZSet.add("ns1", "thirty", 30L);
 
         Set<Tuple<String, Long>> membersWithScores = rocksDBZSet.membersWithScores("ns1");
+        System.out.println(membersWithScores);
 
         assertThat(membersWithScores).hasSize(11);
         assertThat(membersWithScores.stream().map(m -> m._1).collect(Collectors.toList())).contains("one", "two", "three", "four", "ten", "eight", "seven", "twentyone", "twenty", "twentytwo", "thirty");
@@ -221,5 +223,65 @@ class RocksMultiZSetTest extends RocksBaseTest {
         assertFalse(present3);
         assertTrue(present4);
         assertTrue(present5);
+    }
+
+    @Test
+    void add_members_inrange_iterable() {
+        RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
+        rocksDBZSet.add("ns1", "two", 2L);
+        rocksDBZSet.add("ns1", "one", 1L);
+        rocksDBZSet.add("ns1", "three", 3L);
+        rocksDBZSet.add("ns1", "four", 4L);
+        rocksDBZSet.add("ns1", "ten", 10L);
+        rocksDBZSet.add("ns1", "eight", 8L);
+        rocksDBZSet.add("ns1", "seven", 7L);
+        rocksDBZSet.add("ns1", "twentyone", 21L);
+        rocksDBZSet.add("ns1", "twenty", 20L);
+        rocksDBZSet.add("ns1", "twentytwo", 22L);
+        rocksDBZSet.add("ns1", "thirty", 30L);
+
+        var iterator = rocksDBZSet.membersInRangeIterator("ns1", 7L, 21L);
+
+        var membersWithScore = new ArrayList<>();
+        while (iterator.hasNext()) {
+            membersWithScore.add(iterator.next());
+        }
+
+        membersWithScore.forEach(System.out::println);
+        assertThat(membersWithScore).hasSize(5);
+        assertThat(membersWithScore.get(0)).isEqualTo(new Tuple<>("seven", 7L));
+        assertThat(membersWithScore.get(1)).isEqualTo(new Tuple<>("eight", 8L));
+        assertThat(membersWithScore.get(2)).isEqualTo(new Tuple<>("ten", 10L));
+        assertThat(membersWithScore.get(3)).isEqualTo(new Tuple<>("twenty", 20L));
+        assertThat(membersWithScore.get(4)).isEqualTo(new Tuple<>("twentyone", 21L));
+    }
+
+    @Test
+    void add_membersWithScores_iterable() {
+        RocksMultiZSet<String> rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
+        rocksDBZSet.add("ns1", "two", 2L);
+        rocksDBZSet.add("ns1", "one", 1L);
+        rocksDBZSet.add("ns1", "three", 3L);
+        rocksDBZSet.add("ns1", "four", 4L);
+        rocksDBZSet.add("ns1", "ten", 10L);
+        rocksDBZSet.add("ns1", "eight", 8L);
+        rocksDBZSet.add("ns1", "seven", 7L);
+        rocksDBZSet.add("ns1", "twentyone", 21L);
+        rocksDBZSet.add("ns1", "twenty", 20L);
+        rocksDBZSet.add("ns1", "twentytwo", 22L);
+        rocksDBZSet.add("ns1", "thirty", 30L);
+
+        var iterator = rocksDBZSet.membersWithScoresIterator("ns1");
+
+        var membersWithScore = new ArrayList<Tuple<String, Long>>();
+        while (iterator.hasNext()) {
+            membersWithScore.add(iterator.next());
+        }
+
+        membersWithScore.forEach(System.out::println);
+        assertThat(membersWithScore).hasSize(11);
+        assertThat(membersWithScore.stream().map(m -> m._1)
+                .collect(Collectors.toList()))
+                .contains("one", "two", "three", "four", "ten", "eight", "seven", "twentyone", "twenty", "twentytwo", "thirty");
     }
 }

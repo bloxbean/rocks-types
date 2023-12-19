@@ -5,6 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RocksZSetTest extends RocksBaseTest {
@@ -142,5 +146,65 @@ class RocksZSetTest extends RocksBaseTest {
         assertTrue(members.contains("seven"));
         assertTrue(members.contains("eight"));
         assertTrue(members.contains("ten"));
+    }
+
+    @Test
+    void add_members_inrange_iterable() {
+        RocksZSet rocksDBZSet = new RocksZSet(rocksDBConfig, "zset1", "names", String.class);
+        rocksDBZSet.add("two", 2L);
+        rocksDBZSet.add("one", 1L);
+        rocksDBZSet.add("three", 3L);
+        rocksDBZSet.add("four", 4L);
+        rocksDBZSet.add("ten", 10L);
+        rocksDBZSet.add("eight", 8L);
+        rocksDBZSet.add("seven", 7L);
+        rocksDBZSet.add("twentyone", 21L);
+        rocksDBZSet.add("twenty", 20L);
+        rocksDBZSet.add("twentytwo", 22L);
+        rocksDBZSet.add("thirty", 30L);
+
+        var iterator = rocksDBZSet.membersInRangeIterable(7L, 21L);
+
+        var membersWithScore = new ArrayList<>();
+        while (iterator.hasNext()) {
+            membersWithScore.add(iterator.next());
+        }
+
+        membersWithScore.forEach(System.out::println);
+        assertThat(membersWithScore).hasSize(5);
+        assertThat(membersWithScore.get(0)).isEqualTo(new Tuple<>("seven", 7L));
+        assertThat(membersWithScore.get(1)).isEqualTo(new Tuple<>("eight", 8L));
+        assertThat(membersWithScore.get(2)).isEqualTo(new Tuple<>("ten", 10L));
+        assertThat(membersWithScore.get(3)).isEqualTo(new Tuple<>("twenty", 20L));
+        assertThat(membersWithScore.get(4)).isEqualTo(new Tuple<>("twentyone", 21L));
+    }
+
+    @Test
+    void add_membersWithScores_iterable() {
+        RocksZSet<String> rocksDBZSet = new RocksZSet(rocksDBConfig, "zset1", "names", String.class);
+        rocksDBZSet.add("two", 2L);
+        rocksDBZSet.add("one", 1L);
+        rocksDBZSet.add("three", 3L);
+        rocksDBZSet.add("four", 4L);
+        rocksDBZSet.add("ten", 10L);
+        rocksDBZSet.add("eight", 8L);
+        rocksDBZSet.add("seven", 7L);
+        rocksDBZSet.add("twentyone", 21L);
+        rocksDBZSet.add("twenty", 20L);
+        rocksDBZSet.add("twentytwo", 22L);
+        rocksDBZSet.add("thirty", 30L);
+
+        var iterator = rocksDBZSet.membersWithScoresIterable();
+
+        var membersWithScore = new ArrayList<Tuple<String, Long>>();
+        while (iterator.hasNext()) {
+            membersWithScore.add(iterator.next());
+        }
+
+        membersWithScore.forEach(System.out::println);
+        assertThat(membersWithScore).hasSize(11);
+        assertThat(membersWithScore.stream().map(m -> m._1)
+                .collect(Collectors.toList()))
+                .contains("one", "two", "three", "four", "ten", "eight", "seven", "twentyone", "twenty", "twentytwo", "thirty");
     }
 }
