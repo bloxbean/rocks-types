@@ -3,11 +3,10 @@ package com.bloxbean.rocks.types.collection;
 import com.bloxbean.rocks.types.collection.metadata.SetMetadata;
 import com.bloxbean.rocks.types.collection.util.EmptyIterator;
 import com.bloxbean.rocks.types.collection.util.ValueIterator;
-import com.bloxbean.rocks.types.collection.util.ZSetMembersIterator;
-import com.bloxbean.rocks.types.collection.util.ZSetRangeIterator;
 import com.bloxbean.rocks.types.common.KeyBuilder;
 import com.bloxbean.rocks.types.common.Tuple;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
+import com.bloxbean.rocks.types.serializer.Serializer;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.rocksdb.RocksIterator;
@@ -16,7 +15,8 @@ import org.rocksdb.WriteOptions;
 
 import java.util.*;
 
-import static com.bloxbean.rocks.types.common.KeyBuilder.*;
+import static com.bloxbean.rocks.types.common.KeyBuilder.bytesToLong;
+import static com.bloxbean.rocks.types.common.KeyBuilder.longToBytes;
 
 /**
  * Provides ZSet functionality on top of RocksDB. ZSet is a sorted set where each member is associated with a score.
@@ -272,5 +272,114 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
                     .build();
     }
 
+    private class ZSetRangeIterator<T> implements ValueIterator<Tuple<T, Long>> {
+        private final RocksIterator iterator;
+        private final byte[] prefixWithoutScore;
+        private final long endScore;
+        private final Serializer valueSerializer;
+        private final Class<T> valueType;
+
+        public ZSetRangeIterator(@NonNull RocksIterator iterator,
+                                 @NonNull byte[] prefixWithoutScore,
+                                 long beginningScore,
+                                 long endScore,
+                                 @NonNull Serializer valueSerializer,
+                                 @NonNull Class<T> valueType) {
+            this.iterator = iterator;
+            this.prefixWithoutScore = prefixWithoutScore;
+            this.endScore = endScore;
+            this.valueSerializer = valueSerializer;
+            this.valueType = valueType;
+            byte[] prefix = KeyBuilder.appendToKey(prefixWithoutScore, longToBytes(beginningScore));
+            this.iterator.seek(prefix);
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (!iterator.isValid() || !KeyBuilder.hasPrefix(iterator.key(), prefixWithoutScore)) {
+                return false;
+            }
+            var keyWithoutPrefix = KeyBuilder.removePrefix(iterator.key(), prefixWithoutScore);
+            var parts = KeyBuilder.parts(keyWithoutPrefix);
+            long score = bytesToLong(parts.get(0));
+            return score <= endScore;
+        }
+
+        @Override
+        public Tuple<T, Long> next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            byte[] key = iterator.key();
+            iterator.next();
+
+            var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefixWithoutScore);
+            var parts = KeyBuilder.parts(keyWithoutPrefix);
+            long score = bytesToLong(parts.get(0));
+            T member = valueSerializer.deserialize(parts.get(1), valueType);
+
+            return new Tuple<>(member, score);
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Remove not supported");
+        }
+
+        @Override
+        public void close() {
+            iterator.close();
+        }
+    }
+
+    private class ZSetMembersIterator<T> implements ValueIterator<Tuple<T, Long>> {
+        private final RocksIterator iterator;
+        private final byte[] prefix;
+        private final Serializer valueSerializer;
+        private final Class<T> valueType;
+
+        public ZSetMembersIterator(@NonNull RocksIterator rocksIterator,
+                                   @NonNull byte[] prefix,
+                                   @NonNull Serializer valueSerializer,
+                                   @NonNull Class<T> valueType) {
+            this.iterator = rocksIterator;
+            this.prefix = prefix;
+            this.valueSerializer = valueSerializer;
+            this.valueType = valueType;
+            this.iterator.seek(prefix);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.isValid() && KeyBuilder.hasPrefix(iterator.key(), prefix);
+        }
+
+        @Override
+        public Tuple<T, Long> next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            byte[] key = iterator.key();
+            byte[] value = iterator.value();
+            iterator.next();
+
+            var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefix);
+            var parts = KeyBuilder.parts(keyWithoutPrefix);
+            T member = valueSerializer.deserialize(parts.get(0), valueType);
+            Long score = valueSerializer.deserialize(value, Long.class);
+
+            return new Tuple<>(member, score);
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Remove not supported");
+        }
+
+        @Override
+        public void close() {
+            iterator.close();
+        }
+    }
 }
 

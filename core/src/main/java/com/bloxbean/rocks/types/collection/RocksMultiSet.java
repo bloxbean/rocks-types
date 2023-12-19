@@ -4,8 +4,9 @@ import com.bloxbean.rocks.types.collection.metadata.SetMetadata;
 import com.bloxbean.rocks.types.collection.util.EmptyIterator;
 import com.bloxbean.rocks.types.collection.util.ValueIterator;
 import com.bloxbean.rocks.types.common.KeyBuilder;
-import com.bloxbean.rocks.types.collection.util.SetIterator;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
+import com.bloxbean.rocks.types.serializer.Serializer;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
@@ -150,13 +151,58 @@ public class RocksMultiSet<T> extends BaseDataType<T> {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .append(metadata.getVersion())
-                    .append(member != null? valueSerializer.serialize(member) : null)
+                    .append(member != null ? valueSerializer.serialize(member) : null)
                     .build();
         else
             return new KeyBuilder(name)
                     .append(metadata.getVersion())
-                    .append(member != null? valueSerializer.serialize(member) : null)
+                    .append(member != null ? valueSerializer.serialize(member) : null)
                     .build();
     }
+
+    private class SetIterator<T> implements ValueIterator<T> {
+        private final RocksIterator iterator;
+        private final byte[] prefix;
+        private final Serializer valueSerializer;
+        private final Class<T> valueType;
+
+        public SetIterator(@NonNull RocksIterator rocksIterator,
+                           @NonNull byte[] prefix,
+                           @NonNull Serializer valueSerializer,
+                           @NonNull Class<T> valueType) {
+            this.iterator = rocksIterator;
+            this.prefix = prefix;
+            this.valueSerializer = valueSerializer;
+            this.valueType = valueType;
+
+            this.iterator.seek(prefix);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.isValid() && KeyBuilder.hasPrefix(iterator.key(), prefix);
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            byte[] key = iterator.key();
+            iterator.next();
+            return valueSerializer.deserialize(KeyBuilder.removePrefix(key, prefix), valueType);
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Remove not supported");
+        }
+
+        @Override
+        public void close() {
+            iterator.close();
+        }
+    }
+
 }
 
