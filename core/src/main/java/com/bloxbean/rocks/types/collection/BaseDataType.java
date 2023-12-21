@@ -9,6 +9,7 @@ import org.rocksdb.RocksDB;
 import org.rocksdb.RocksIterator;
 import org.rocksdb.WriteBatch;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -99,6 +100,19 @@ abstract class BaseDataType<T> {
             return db.get(columnFamilyHandle, key);
         } else {
             return db.get(key);
+        }
+    }
+
+    @SneakyThrows
+    protected List<byte[]> get(List<byte[]> keys) {
+        if (columnFamilyHandle != null) {
+            var columnFamilies = keys.stream()
+                    .map(key -> columnFamilyHandle)
+                    .toList();
+
+            return db.multiGetAsList(columnFamilies, keys);
+        } else {
+            return db.multiGetAsList(keys);
         }
     }
 
