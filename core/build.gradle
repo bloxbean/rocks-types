@@ -2,6 +2,7 @@ dependencies {
     api libs.slf4j.api
 
     api libs.rocksdb
+    api libs.roaringbitmap
     implementation libs.messagepack.jackson
 }
 
