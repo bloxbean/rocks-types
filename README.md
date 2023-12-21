@@ -15,7 +15,10 @@ way to store and retrieve data from RocksDB.
 - [x] **MultiSet (RocksMultiSet) :** A basic implementation for set where you can add, remove and check if an item exists. It supports multiple sets under the same name, but different namespaces.
 - [x] **ZSet (RocksZSet) :** A basic implementation for sorted set where you can add, remove and check if an item exists. You can find score of an item and items within a score range.
 - [x] **MultiZSet (RocksMultiZSet) :** A basic implementation for sorted set where you can add, remove and check if an item exists. You can find score of an item and items within a score range. It supports multiple sorted sets under the same name, but different namespaces.
-- [ ] **Map (RocksMap) :** Not implemented yet
+- [x] **Map (RocksMap) :** A basic implementation for map where you can add, remove and check if an item exists.
+- [x] **MultiMap (RocksMultiMap) :** A basic implementation for map where you can add, remove and check if an item exists. It supports multiple maps under the same name, but different namespaces.
+- [x] **Bitmap (RocksBitmap) :** A basic implementation for bitmap where you can set, unset and check if a bit is set.
+- [x] **MultiBitmap (RocksMultiBitmap) :** A basic implementation for bitmap where you can set, unset and check if a bit is set. It supports multiple bitmaps under the same name, but different namespaces.
 
 ## Pre-requisites
 
