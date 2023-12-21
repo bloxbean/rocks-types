@@ -105,6 +105,7 @@ subprojects {
         maven {
             url "https://oss.sonatype.org/content/repositories/snapshots"
         }
+        maven { url 'https://jitpack.io' }
     }
 
     archivesBaseName = 'rocks-types-' + project.name

@@ -1,6 +1,7 @@
 [libraries]
 rocksdb="org.rocksdb:rocksdbjni:8.8.1"
 messagepack-jackson="org.msgpack:jackson-dataformat-msgpack:0.9.6"
+roaringbitmap="org.roaringbitmap:RoaringBitmap:1.0.1"
 
 lombok = "org.projectlombok:lombok:1.18.30"
 slf4j-api = "org.slf4j:slf4j-api:1.7.36"

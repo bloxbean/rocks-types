@@ -58,6 +58,24 @@ abstract class BaseDataType<T> {
     }
 
     @SneakyThrows
+    protected void merge(WriteBatch writeBatch, byte[] key, byte[] value) {
+        if (writeBatch != null) {
+            mergeBatch(writeBatch, key, value);
+        } else {
+            merge(key, value);
+        }
+    }
+
+    @SneakyThrows
+    protected void mergeBatch(WriteBatch batch, byte[] key, byte[] value) {
+        if (columnFamilyHandle != null) {
+            batch.merge(columnFamilyHandle, key, value);
+        } else {
+            batch.merge(key, value);
+        }
+    }
+
+    @SneakyThrows
     protected void deleteBatch(WriteBatch batch, byte[] key) {
         if (columnFamilyHandle != null) {
             batch.delete(columnFamilyHandle, key);
@@ -90,6 +108,15 @@ abstract class BaseDataType<T> {
             db.delete(columnFamilyHandle, key);
         } else {
             db.delete(key);
+        }
+    }
+
+    @SneakyThrows
+    protected void merge(byte[] key, byte[] value) {
+        if (columnFamilyHandle != null) {
+            db.merge(columnFamilyHandle, key, value);
+        } else {
+            db.merge(key, value);
         }
     }
 
