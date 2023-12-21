@@ -149,4 +149,16 @@ class RocksMultiMapTest extends RocksBaseTest {
         assertThat(entries2).isEqualTo(List.of(Map.entry("key5", "value5"),
                 Map.entry("key6", "value6")));
     }
+
+    @Test
+    void put_multiget() {
+        var map = new RocksMultiMap<String, String>(rocksDBConfig, "testMap", String.class, String.class);
+        map.put("ns1", "key1", "value1");
+        map.put("ns1", "key2", "value2");
+        map.put("ns1", "key3", "value3");
+        map.put("ns1", "key4", "value4");
+
+        List<String> values = map.multiGet("ns1", List.of("key1", "key2", "key3", "key4"));
+        assertThat(values).isEqualTo(List.of("value1", "value2", "value3", "value4"));
+    }
 }

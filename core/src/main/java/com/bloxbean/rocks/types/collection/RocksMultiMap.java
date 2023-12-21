@@ -59,6 +59,30 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
         return Optional.of(valueSerializer.deserialize(valueBytes, valueType));
     }
 
+    public List<V> multiGet(String ns, List<K> keys) {
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty())
+            return Collections.emptyList();
+
+        var keysBytes = keys.stream()
+                .map(key -> getKey(metadata.get(), ns, key))
+                .toList();
+
+        List<byte[]> values = get(keysBytes);
+
+        if (values == null || values.size() == 0)
+            return Collections.emptyList();
+
+        return values.stream()
+                .map(value -> {
+                    if (value == null)
+                        return null;
+                    else
+                        return valueSerializer.deserialize(value, valueType);
+                })
+                .toList();
+    }
+
     public boolean contains(String ns, K key) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())

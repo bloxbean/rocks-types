@@ -6,6 +6,7 @@ import com.bloxbean.rocks.types.config.RocksDBConfig;
 import lombok.NonNull;
 import org.rocksdb.WriteBatch;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -57,5 +58,9 @@ public class RocksMap<K, V> extends RocksMultiMap<K, V> {
 
     public ValueIterator<Map.Entry<K, V>> entriesIterator() {
         return super.entriesIterator(null);
+    }
+
+    public List<V> multiGet(List<K> keys) {
+        return super.multiGet(null, keys);
     }
 }
