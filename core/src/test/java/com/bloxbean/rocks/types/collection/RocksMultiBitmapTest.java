@@ -23,6 +23,7 @@ class RocksMultiBitmapTest extends RocksBaseTest {
 
             rocksBitMap.setBit("ns1", 201);
             rocksBitMap.setBit("ns1", 250);
+            rocksBitMap.setBit("ns1", 999999899);
 
             assertThat(rocksBitMap.getBit("ns1", 1)).isTrue();
             assertThat(rocksBitMap.getBit("ns1", 50)).isTrue();
@@ -38,6 +39,8 @@ class RocksMultiBitmapTest extends RocksBaseTest {
             assertThat(rocksBitMap.getBit("ns1", 200)).isFalse();
             assertThat(rocksBitMap.getBit("ns1", 240)).isFalse();
             assertThat(rocksBitMap.getBit("ns1", 350)).isFalse();
+            assertThat(rocksBitMap.getBit("ns1", 999999899)).isTrue();
+            assertThat(rocksBitMap.getBit("ns1", 999999898)).isFalse();
         }
     }
 
