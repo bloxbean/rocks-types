@@ -1,5 +1,6 @@
 package com.bloxbean.rocks.types.collection;
 
+import com.bloxbean.rocks.types.collection.util.ReverseValueIterator;
 import com.bloxbean.rocks.types.collection.util.ValueIterator;
 import com.bloxbean.rocks.types.common.Tuple;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
@@ -73,5 +74,12 @@ public class RocksZSet<T> extends RocksMultiZSet<T> {
     public ValueIterator<Tuple<T, Long>> membersInRangeIterable(long beginningScore, long endScore) {
         return super.membersInRangeIterator(null, beginningScore, endScore);
     }
+
+    public ReverseValueIterator<Tuple<T, Long>> membersInRangeReverseIterator(long startScore, long endScore) {
+        return super.membersInRangeReverseIterator(null, startScore, endScore);
+    }
+
+    //TODO-- membersAfter
+    //TODO-- membersAfterIterator
 }
 

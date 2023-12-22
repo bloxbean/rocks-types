@@ -207,4 +207,34 @@ class RocksZSetTest extends RocksBaseTest {
                 .collect(Collectors.toList()))
                 .contains("one", "two", "three", "four", "ten", "eight", "seven", "twentyone", "twenty", "twentytwo", "thirty");
     }
+
+    @Test
+    void add_members_inrange_reverse_iterable() {
+        RocksZSet rocksDBZSet = new RocksZSet(rocksDBConfig, "zset1", "names", String.class);
+        rocksDBZSet.add("two", 2L);
+        rocksDBZSet.add("one", 1L);
+        rocksDBZSet.add("three", 3L);
+        rocksDBZSet.add("four", 4L);
+        rocksDBZSet.add("ten", 10L);
+        rocksDBZSet.add("eight", 8L);
+        rocksDBZSet.add("seven", 7L);
+        rocksDBZSet.add("twentyone", 21L);
+        rocksDBZSet.add("twenty", 20L);
+        rocksDBZSet.add("twentytwo", 22L);
+        rocksDBZSet.add("thirty", 30L);
+
+        var iterator = rocksDBZSet.membersInRangeReverseIterator(7L, 2L);
+
+        var membersWithScore = new ArrayList<>();
+        while (iterator.hasPrev()) {
+            membersWithScore.add(iterator.prev());
+        }
+
+        membersWithScore.forEach(System.out::println);
+        assertThat(membersWithScore).hasSize(4);
+        assertThat(membersWithScore.get(0)).isEqualTo(new Tuple<>("seven", 7L));
+        assertThat(membersWithScore.get(1)).isEqualTo(new Tuple<>("four", 4L));
+        assertThat(membersWithScore.get(2)).isEqualTo(new Tuple<>("three", 3L));
+        assertThat(membersWithScore.get(3)).isEqualTo(new Tuple<>("two", 2L));
+    }
 }
