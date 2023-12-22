@@ -2,7 +2,7 @@ package com.bloxbean.rocks.types.collection.util;
 
 import java.util.NoSuchElementException;
 
-public class EmptyIterator<T> implements ValueIterator<T> {
+public class EmptyIterator<T> implements ValueIterator<T>, ReverseValueIterator<T> {
 
     public EmptyIterator() {
 
@@ -25,6 +25,16 @@ public class EmptyIterator<T> implements ValueIterator<T> {
 
     @Override
     public void close() {
+    }
+
+    @Override
+    public boolean hasPrev() {
+        return false;
+    }
+
+    @Override
+    public T prev() {
+        throw new NoSuchElementException();
     }
 }
 

@@ -257,6 +257,36 @@ class RocksMultiZSetTest extends RocksBaseTest {
     }
 
     @Test
+    void add_members_inrange_reverse_iterable() {
+        RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
+        rocksDBZSet.add("ns1", "two", 2L);
+        rocksDBZSet.add("ns1", "one", 1L);
+        rocksDBZSet.add("ns1", "three", 3L);
+        rocksDBZSet.add("ns1", "four", 4L);
+        rocksDBZSet.add("ns1", "ten", 10L);
+        rocksDBZSet.add("ns1", "eight", 8L);
+        rocksDBZSet.add("ns1", "seven", 7L);
+        rocksDBZSet.add("ns1", "twentyone", 21L);
+        rocksDBZSet.add("ns1", "twenty", 20L);
+        rocksDBZSet.add("ns1", "twentytwo", 22L);
+        rocksDBZSet.add("ns1", "thirty", 30L);
+
+        var iterator = rocksDBZSet.membersInRangeReverseIterator("ns1", 7L, 2L);
+
+        var membersWithScore = new ArrayList<>();
+        while (iterator.hasPrev()) {
+            membersWithScore.add(iterator.prev());
+        }
+
+        membersWithScore.forEach(System.out::println);
+        assertThat(membersWithScore).hasSize(4);
+        assertThat(membersWithScore.get(0)).isEqualTo(new Tuple<>("seven", 7L));
+        assertThat(membersWithScore.get(1)).isEqualTo(new Tuple<>("four", 4L));
+        assertThat(membersWithScore.get(2)).isEqualTo(new Tuple<>("three", 3L));
+        assertThat(membersWithScore.get(3)).isEqualTo(new Tuple<>("two", 2L));
+    }
+
+    @Test
     void add_membersWithScores_iterable() {
         RocksMultiZSet<String> rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
         rocksDBZSet.add("ns1", "two", 2L);

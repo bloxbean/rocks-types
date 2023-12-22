@@ -2,6 +2,7 @@ package com.bloxbean.rocks.types.collection;
 
 import com.bloxbean.rocks.types.collection.metadata.SetMetadata;
 import com.bloxbean.rocks.types.collection.util.EmptyIterator;
+import com.bloxbean.rocks.types.collection.util.ReverseValueIterator;
 import com.bloxbean.rocks.types.collection.util.ValueIterator;
 import com.bloxbean.rocks.types.common.KeyBuilder;
 import com.bloxbean.rocks.types.common.Tuple;
@@ -202,6 +203,16 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
                 valueSerializer, valueType);
     }
 
+    public ReverseValueIterator<Tuple<T, Long>> membersInRangeReverseIterator(String ns, long startScore, long endScore) {
+        var metadata = getMetadata(ns);
+        if (metadata.isEmpty()) {
+            return new EmptyIterator<>();
+        }
+        byte[] prefixWithoutScore = getScoreSubKeyPrefix(metadata.get(), ns);
+        return new ZSetReverseRangeIterator(iterator(), prefixWithoutScore, startScore, endScore,
+                valueSerializer, valueType);
+    }
+
     @SneakyThrows
     protected Optional<SetMetadata> getMetadata(String ns) {
         byte[] metadataKeyName = getMetadataKey(ns);
@@ -381,5 +392,66 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
             iterator.close();
         }
     }
+
+    private class ZSetReverseRangeIterator<T> implements ReverseValueIterator<Tuple<T, Long>> {
+        private final RocksIterator iterator;
+        private final byte[] prefixWithoutScore;
+        private final long startScore; // Score to start iterating from, in reverse
+        private final long endScore;
+        private final Serializer valueSerializer;
+        private final Class<T> valueType;
+
+        public ZSetReverseRangeIterator(@NonNull RocksIterator iterator,
+                                        @NonNull byte[] prefixWithoutScore,
+                                        long startScore, // Score to start iterating from, in reverse
+                                        long endScore,
+                                        @NonNull Serializer valueSerializer,
+                                        @NonNull Class<T> valueType) {
+            this.iterator = iterator;
+            this.prefixWithoutScore = prefixWithoutScore;
+            this.startScore = startScore;
+            this.endScore = endScore;
+            this.valueSerializer = valueSerializer;
+            this.valueType = valueType;
+
+            // Seek to the starting position for reverse iteration
+            //to include start score in the result
+            byte[] startPrefix = KeyBuilder.appendToKey(prefixWithoutScore, longToBytes(this.startScore + 1));
+            this.iterator.seekForPrev(startPrefix);
+        }
+
+        @Override
+        public boolean hasPrev() {
+            if (!iterator.isValid() || !KeyBuilder.hasPrefix(iterator.key(), prefixWithoutScore)) {
+                return false;
+            }
+            var keyWithoutPrefix = KeyBuilder.removePrefix(iterator.key(), prefixWithoutScore);
+            var parts = KeyBuilder.parts(keyWithoutPrefix);
+            long score = bytesToLong(parts.get(0));
+            return score <= startScore && score >= endScore;
+        }
+
+        @Override
+        public Tuple<T, Long> prev() {
+            if (!hasPrev()) {
+                throw new NoSuchElementException();
+            }
+            byte[] key = iterator.key();
+            iterator.prev(); // Move to the previous item
+
+            var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefixWithoutScore);
+            var parts = KeyBuilder.parts(keyWithoutPrefix);
+            long score = bytesToLong(parts.get(0));
+            T member = valueSerializer.deserialize(parts.get(1), valueType);
+
+            return new Tuple<>(member, score);
+        }
+
+        @Override
+        public void close() {
+            iterator.close();
+        }
+    }
+
 }
 
