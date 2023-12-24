@@ -16,9 +16,23 @@ public class KeyBuilder {
         addPart(name.getBytes(StandardCharsets.UTF_8));
     }
 
+    public KeyBuilder(@NonNull byte[] name) {
+        addPart(name);
+    }
+
     public KeyBuilder(@NonNull String name, @NonNull String ns) {
         addPart(name.getBytes(StandardCharsets.UTF_8));
         addPart(ns.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public KeyBuilder(@NonNull String name, @NonNull byte[] ns) {
+        addPart(name.getBytes(StandardCharsets.UTF_8));
+        addPart(ns);
+    }
+
+    public KeyBuilder(@NonNull byte[] name, @NonNull byte[] ns) {
+        addPart(name);
+        addPart(ns);
     }
 
     public byte[] build() {

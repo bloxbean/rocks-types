@@ -35,19 +35,19 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
         this.keyType = keyType;
     }
 
-    public void put(String ns, K key, V value) {
+    public void put(byte[] ns, K key, V value) {
         var metadata = createMetadata(ns).orElseThrow();
         put(ns, null, metadata, key, value);
     }
 
-    public void putBatch(String ns, WriteBatch writeBatch, Tuple<K, V>... keyValues) {
+    public void putBatch(byte[] ns, WriteBatch writeBatch, Tuple<K, V>... keyValues) {
         var metadata = createMetadata(ns).orElseThrow();
         for (var keyVal : keyValues) {
             put(ns, writeBatch, metadata, keyVal._1, keyVal._2);
         }
     }
 
-    public Optional<V> get(String ns, K key) {
+    public Optional<V> get(byte[] ns, K key) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return Optional.empty();
@@ -59,7 +59,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
         return Optional.of(valueSerializer.deserialize(valueBytes, valueType));
     }
 
-    public List<V> multiGet(String ns, List<K> keys) {
+    public List<V> multiGet(byte[] ns, List<K> keys) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return Collections.emptyList();
@@ -83,7 +83,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
                 .toList();
     }
 
-    public boolean contains(String ns, K key) {
+    public boolean contains(byte[] ns, K key) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return false;
@@ -93,7 +93,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
     }
 
     @SneakyThrows
-    public void remove(String ns, K key) {
+    public void remove(byte[] ns, K key) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return;
@@ -104,7 +104,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
     }
 
     @SneakyThrows
-    public void removeBatch(String ns, WriteBatch writeBatch, K... keys) {
+    public void removeBatch(byte[] ns, WriteBatch writeBatch, K... keys) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return;
@@ -113,7 +113,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
             delete(ns, writeBatch, metadata.get(), key);
     }
 
-    public Set<Map.Entry<K, V>> entries(String ns) {
+    public Set<Map.Entry<K, V>> entries(byte[] ns) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return Collections.emptySet();
@@ -138,7 +138,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
         return members;
     }
 
-    public ValueIterator<Map.Entry<K, V>> entriesIterator(String ns) {
+    public ValueIterator<Map.Entry<K, V>> entriesIterator(byte[] ns) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty()) {
             return new EmptyIterator<>();
@@ -147,19 +147,19 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
         return new MapIterator(prefix);
     }
 
-    private void put(String ns, WriteBatch writeBatch, MapMetadata metadata, K key, V value) {
+    private void put(byte[] ns, WriteBatch writeBatch, MapMetadata metadata, K key, V value) {
         byte[] keyBytes = getKey(metadata, ns, key);
         byte[] valueBytes = valueSerializer.serialize(value);
 
         write(writeBatch, keyBytes, valueBytes);
     }
 
-    private void delete(String ns, WriteBatch writeBatch, MapMetadata metadata, K key) {
+    private void delete(byte[] ns, WriteBatch writeBatch, MapMetadata metadata, K key) {
         deleteBatch(writeBatch, getKey(metadata, ns, key));
     }
 
     @SneakyThrows
-    protected Optional<MapMetadata> getMetadata(String ns) {
+    protected Optional<MapMetadata> getMetadata(byte[] ns) {
         byte[] metadataKeyName = getMetadataKey(ns);
         var metadataValueBytes = get(metadataKeyName);
         if (metadataValueBytes == null || metadataValueBytes.length == 0) {
@@ -170,7 +170,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
     }
 
     @Override
-    protected Optional<MapMetadata> createMetadata(String ns) {
+    protected Optional<MapMetadata> createMetadata(byte[] ns) {
         byte[] metadataKeyName = getMetadataKey(ns);
         var metadata = getMetadata(ns);
         if (metadata.isEmpty()) {
@@ -183,7 +183,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
         }
     }
 
-    protected byte[] getMetadataKey(String ns) {
+    protected byte[] getMetadataKey(byte[] ns) {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .build();
@@ -192,7 +192,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
                     .build();
     }
 
-    private byte[] getKey(MapMetadata metadata, String ns, K key) {
+    private byte[] getKey(MapMetadata metadata, byte[] ns, K key) {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .append(metadata.getVersion())

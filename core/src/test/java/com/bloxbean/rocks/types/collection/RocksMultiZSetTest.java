@@ -6,6 +6,7 @@ import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RocksMultiZSetTest extends RocksBaseTest {
+    byte[] ns = "ns1".getBytes();
 
     @Override
     public String getColumnFamilies() {
@@ -26,19 +28,19 @@ class RocksMultiZSetTest extends RocksBaseTest {
     @Test
     void add_members() {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
-        rocksDBZSet.add("ns1", "two", 2L);
-        rocksDBZSet.add("ns1", "one", 1L);
-        rocksDBZSet.add("ns1", "three", 3L);
-        rocksDBZSet.add("ns1", "four", 4L);
-        rocksDBZSet.add("ns1", "ten", 10L);
-        rocksDBZSet.add("ns1", "eight", 8L);
-        rocksDBZSet.add("ns1", "seven", 7L);
-        rocksDBZSet.add("ns1", "twentyone", 21L);
-        rocksDBZSet.add("ns1", "twenty", 20L);
-        rocksDBZSet.add("ns1", "twentytwo", 22L);
-        rocksDBZSet.add("ns1", "thirty", 30L);
+        rocksDBZSet.add(ns, "two", 2L);
+        rocksDBZSet.add(ns, "one", 1L);
+        rocksDBZSet.add(ns, "three", 3L);
+        rocksDBZSet.add(ns, "four", 4L);
+        rocksDBZSet.add(ns, "ten", 10L);
+        rocksDBZSet.add(ns, "eight", 8L);
+        rocksDBZSet.add(ns, "seven", 7L);
+        rocksDBZSet.add(ns, "twentyone", 21L);
+        rocksDBZSet.add(ns, "twenty", 20L);
+        rocksDBZSet.add(ns, "twentytwo", 22L);
+        rocksDBZSet.add(ns, "thirty", 30L);
 
-        var members = rocksDBZSet.members("ns1");
+        var members = rocksDBZSet.members(ns);
         assertEquals(11, members.size());
         assertThat(members).contains("one", "two", "three", "four", "ten", "eight", "seven", "twentyone", "twenty", "twentytwo", "thirty");
     }
@@ -67,13 +69,13 @@ class RocksMultiZSetTest extends RocksBaseTest {
     void addBatch_members() throws Exception {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
         WriteBatch writeBatch = new WriteBatch();
-        rocksDBZSet.addBatch("ns1", writeBatch, new Tuple<>("two", 2L), new Tuple<>("one", 1L), new Tuple<>("three", 3L), new Tuple<>("four", 4L),
+        rocksDBZSet.addBatch(ns, writeBatch, new Tuple<>("two", 2L), new Tuple<>("one", 1L), new Tuple<>("three", 3L), new Tuple<>("four", 4L),
                 new Tuple<>("ten", 10L), new Tuple<>("eight", 8L), new Tuple<>("seven", 7L), new Tuple<>("twentyone", 21L),
                 new Tuple<>("twenty", 20L), new Tuple<>("twentytwo", 22L), new Tuple<>("thirty", 30L));
 
         rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
 
-        var members = rocksDBZSet.members("ns1");
+        var members = rocksDBZSet.members(ns);
         assertEquals(11, members.size());
         assertThat(members).contains("one", "two", "three", "four", "ten", "eight", "seven", "twentyone", "twenty", "twentytwo", "thirty");
     }
@@ -82,14 +84,14 @@ class RocksMultiZSetTest extends RocksBaseTest {
     void addBatch_getScore() throws Exception {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
         WriteBatch writeBatch = new WriteBatch();
-        rocksDBZSet.addBatch("ns1", writeBatch, new Tuple<>("two", 2L), new Tuple<>("one", 1L), new Tuple<>("three", 3L), new Tuple<>("four", 4L),
+        rocksDBZSet.addBatch(ns, writeBatch, new Tuple<>("two", 2L), new Tuple<>("one", 1L), new Tuple<>("three", 3L), new Tuple<>("four", 4L),
                 new Tuple<>("ten", 10L), new Tuple<>("eight", 8L), new Tuple<>("seven", 7L), new Tuple<>("twentyone", 21L),
                 new Tuple<>("twenty", 20L), new Tuple<>("twentytwo", 22L), new Tuple<>("thirty", 30L));
 
         rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
 
-        var score = rocksDBZSet.getScore("ns1", "twentytwo");
-        var score2 = rocksDBZSet.getScore("ns1", "eighty");
+        var score = rocksDBZSet.getScore(ns, "twentytwo");
+        var score2 = rocksDBZSet.getScore(ns, "eighty");
         assertThat(score).isEqualTo(Optional.of(22L));
         assertThat(score2).isEmpty();
     }
@@ -97,19 +99,19 @@ class RocksMultiZSetTest extends RocksBaseTest {
     @Test
     void add_members_withScores() {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
-        rocksDBZSet.add("ns1", "two", 2L);
-        rocksDBZSet.add("ns1", "one", 1L);
-        rocksDBZSet.add("ns1", "three", 3L);
-        rocksDBZSet.add("ns1", "four", 4L);
-        rocksDBZSet.add("ns1", "ten", 10L);
-        rocksDBZSet.add("ns1", "eight", 8L);
-        rocksDBZSet.add("ns1", "seven", 7L);
-        rocksDBZSet.add("ns1", "twentyone", 21L);
-        rocksDBZSet.add("ns1", "twenty", 20L);
-        rocksDBZSet.add("ns1", "twentytwo", 22L);
-        rocksDBZSet.add("ns1", "thirty", 30L);
+        rocksDBZSet.add(ns, "two", 2L);
+        rocksDBZSet.add(ns, "one", 1L);
+        rocksDBZSet.add(ns, "three", 3L);
+        rocksDBZSet.add(ns, "four", 4L);
+        rocksDBZSet.add(ns, "ten", 10L);
+        rocksDBZSet.add(ns, "eight", 8L);
+        rocksDBZSet.add(ns, "seven", 7L);
+        rocksDBZSet.add(ns, "twentyone", 21L);
+        rocksDBZSet.add(ns, "twenty", 20L);
+        rocksDBZSet.add(ns, "twentytwo", 22L);
+        rocksDBZSet.add(ns, "thirty", 30L);
 
-        Set<Tuple<String, Long>> membersWithScores = rocksDBZSet.membersWithScores("ns1");
+        Set<Tuple<String, Long>> membersWithScores = rocksDBZSet.membersWithScores(ns);
         System.out.println(membersWithScores);
 
         assertThat(membersWithScores).hasSize(11);
@@ -120,19 +122,19 @@ class RocksMultiZSetTest extends RocksBaseTest {
     @Test
     void add_members_inrange() {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
-        rocksDBZSet.add("ns1", "two", 2L);
-        rocksDBZSet.add("ns1", "one", 1L);
-        rocksDBZSet.add("ns1", "three", 3L);
-        rocksDBZSet.add("ns1", "four", 4L);
-        rocksDBZSet.add("ns1", "ten", 10L);
-        rocksDBZSet.add("ns1", "eight", 8L);
-        rocksDBZSet.add("ns1", "seven", 7L);
-        rocksDBZSet.add("ns1", "twentyone", 21L);
-        rocksDBZSet.add("ns1", "twenty", 20L);
-        rocksDBZSet.add("ns1", "twentytwo", 22L);
-        rocksDBZSet.add("ns1", "thirty", 30L);
+        rocksDBZSet.add(ns, "two", 2L);
+        rocksDBZSet.add(ns, "one", 1L);
+        rocksDBZSet.add(ns, "three", 3L);
+        rocksDBZSet.add(ns, "four", 4L);
+        rocksDBZSet.add(ns, "ten", 10L);
+        rocksDBZSet.add(ns, "eight", 8L);
+        rocksDBZSet.add(ns, "seven", 7L);
+        rocksDBZSet.add(ns, "twentyone", 21L);
+        rocksDBZSet.add(ns, "twenty", 20L);
+        rocksDBZSet.add(ns, "twentytwo", 22L);
+        rocksDBZSet.add(ns, "thirty", 30L);
 
-        var membersWithScore = rocksDBZSet.membersInRange("ns1", 7L, 21L);
+        var membersWithScore = rocksDBZSet.membersInRange(ns, 7L, 21L);
         membersWithScore.forEach(System.out::println);
         assertThat(membersWithScore).hasSize(5);
         assertThat(membersWithScore.get(0)).isEqualTo(new Tuple<>("seven", 7L));
@@ -145,20 +147,20 @@ class RocksMultiZSetTest extends RocksBaseTest {
     @Test
     void add_contains() {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet<String>(rocksDBConfig, "zset1", "names", String.class);
-        rocksDBZSet.add("ns1", "two", 2L);
-        rocksDBZSet.add("ns1", "one", 1L);
-        rocksDBZSet.add("ns1", "three", 3L);
-        rocksDBZSet.add("ns1", "four", 4L);
-        rocksDBZSet.add("ns1", "ten", 10L);
-        rocksDBZSet.add("ns1", "eight", 8L);
-        rocksDBZSet.add("ns1", "seven", 7L);
-        rocksDBZSet.add("ns1", "twentyone", 21L);
-        rocksDBZSet.add("ns1", "twenty", 20L);
-        rocksDBZSet.add("ns1", "twentytwo", 22L);
-        rocksDBZSet.add("ns1", "thirty", 30L);
+        rocksDBZSet.add(ns, "two", 2L);
+        rocksDBZSet.add(ns, "one", 1L);
+        rocksDBZSet.add(ns, "three", 3L);
+        rocksDBZSet.add(ns, "four", 4L);
+        rocksDBZSet.add(ns, "ten", 10L);
+        rocksDBZSet.add(ns, "eight", 8L);
+        rocksDBZSet.add(ns, "seven", 7L);
+        rocksDBZSet.add(ns, "twentyone", 21L);
+        rocksDBZSet.add(ns, "twenty", 20L);
+        rocksDBZSet.add(ns, "twentytwo", 22L);
+        rocksDBZSet.add(ns, "thirty", 30L);
 
-        var present = rocksDBZSet.contains("ns1", "seven");
-        var notPresent = rocksDBZSet.contains("ns1", "fourty");
+        var present = rocksDBZSet.contains(ns, "seven");
+        var notPresent = rocksDBZSet.contains(ns, "fourty");
         assertTrue(present);
         assertFalse(notPresent);
     }
@@ -166,27 +168,27 @@ class RocksMultiZSetTest extends RocksBaseTest {
     @Test
     void add_remove() {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
-        rocksDBZSet.add("ns1", "two", 2L);
-        rocksDBZSet.add("ns1", "one", 1L);
-        rocksDBZSet.add("ns1", "three", 3L);
-        rocksDBZSet.add("ns1", "four", 4L);
-        rocksDBZSet.add("ns1", "ten", 10L);
-        rocksDBZSet.add("ns1", "eight", 8L);
-        rocksDBZSet.add("ns1", "seven", 7L);
-        rocksDBZSet.add("ns1", "twentyone", 21L);
-        rocksDBZSet.add("ns1", "twenty", 20L);
-        rocksDBZSet.add("ns1", "twentytwo", 22L);
-        rocksDBZSet.add("ns1", "thirty", 30L);
+        rocksDBZSet.add(ns, "two", 2L);
+        rocksDBZSet.add(ns, "one", 1L);
+        rocksDBZSet.add(ns, "three", 3L);
+        rocksDBZSet.add(ns, "four", 4L);
+        rocksDBZSet.add(ns, "ten", 10L);
+        rocksDBZSet.add(ns, "eight", 8L);
+        rocksDBZSet.add(ns, "seven", 7L);
+        rocksDBZSet.add(ns, "twentyone", 21L);
+        rocksDBZSet.add(ns, "twenty", 20L);
+        rocksDBZSet.add(ns, "twentytwo", 22L);
+        rocksDBZSet.add(ns, "thirty", 30L);
 
-        rocksDBZSet.remove("ns1", "seven");
-        rocksDBZSet.remove("ns1", "fourty");
-        rocksDBZSet.remove("ns1", "one");
+        rocksDBZSet.remove(ns, "seven");
+        rocksDBZSet.remove(ns, "fourty");
+        rocksDBZSet.remove(ns, "one");
 
-        var present1 = rocksDBZSet.contains("ns1", "seven");
-        var present2 = rocksDBZSet.contains("ns1", "fourty");
-        var present3 = rocksDBZSet.contains("ns1", "one");
-        var present4 = rocksDBZSet.contains("ns1", "two");
-        var present5 = rocksDBZSet.contains("ns1", "three");
+        var present1 = rocksDBZSet.contains(ns, "seven");
+        var present2 = rocksDBZSet.contains(ns, "fourty");
+        var present3 = rocksDBZSet.contains(ns, "one");
+        var present4 = rocksDBZSet.contains(ns, "two");
+        var present5 = rocksDBZSet.contains(ns, "three");
 
         assertFalse(present1);
         assertFalse(present2);
@@ -198,28 +200,28 @@ class RocksMultiZSetTest extends RocksBaseTest {
     @Test
     void add_removeBatch() throws Exception {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
-        rocksDBZSet.add("ns1", "two", 2L);
-        rocksDBZSet.add("ns1", "one", 1L);
-        rocksDBZSet.add("ns1", "three", 3L);
-        rocksDBZSet.add("ns1", "four", 4L);
-        rocksDBZSet.add("ns1", "ten", 10L);
-        rocksDBZSet.add("ns1", "eight", 8L);
-        rocksDBZSet.add("ns1", "seven", 7L);
-        rocksDBZSet.add("ns1", "twentyone", 21L);
-        rocksDBZSet.add("ns1", "twenty", 20L);
-        rocksDBZSet.add("ns1", "twentytwo", 22L);
-        rocksDBZSet.add("ns1", "thirty", 30L);
+        rocksDBZSet.add(ns, "two", 2L);
+        rocksDBZSet.add(ns, "one", 1L);
+        rocksDBZSet.add(ns, "three", 3L);
+        rocksDBZSet.add(ns, "four", 4L);
+        rocksDBZSet.add(ns, "ten", 10L);
+        rocksDBZSet.add(ns, "eight", 8L);
+        rocksDBZSet.add(ns, "seven", 7L);
+        rocksDBZSet.add(ns, "twentyone", 21L);
+        rocksDBZSet.add(ns, "twenty", 20L);
+        rocksDBZSet.add(ns, "twentytwo", 22L);
+        rocksDBZSet.add(ns, "thirty", 30L);
 
         WriteBatch writeBatch = new WriteBatch();
-        rocksDBZSet.removeBatch("ns1", writeBatch, "seven", "fourty", "one");
+        rocksDBZSet.removeBatch(ns, writeBatch, "seven", "fourty", "one");
 
         rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
 
-        var present1 = rocksDBZSet.contains("ns1", "seven");
-        var present2 = rocksDBZSet.contains("ns1", "fourty");
-        var present3 = rocksDBZSet.contains("ns1", "one");
-        var present4 = rocksDBZSet.contains("ns1", "two");
-        var present5 = rocksDBZSet.contains("ns1", "three");
+        var present1 = rocksDBZSet.contains(ns, "seven");
+        var present2 = rocksDBZSet.contains(ns, "fourty");
+        var present3 = rocksDBZSet.contains(ns, "one");
+        var present4 = rocksDBZSet.contains(ns, "two");
+        var present5 = rocksDBZSet.contains(ns, "three");
 
         assertFalse(present1);
         assertFalse(present2);
@@ -231,19 +233,19 @@ class RocksMultiZSetTest extends RocksBaseTest {
     @Test
     void add_members_inrange_iterable() {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
-        rocksDBZSet.add("ns1", "two", 2L);
-        rocksDBZSet.add("ns1", "one", 1L);
-        rocksDBZSet.add("ns1", "three", 3L);
-        rocksDBZSet.add("ns1", "four", 4L);
-        rocksDBZSet.add("ns1", "ten", 10L);
-        rocksDBZSet.add("ns1", "eight", 8L);
-        rocksDBZSet.add("ns1", "seven", 7L);
-        rocksDBZSet.add("ns1", "twentyone", 21L);
-        rocksDBZSet.add("ns1", "twenty", 20L);
-        rocksDBZSet.add("ns1", "twentytwo", 22L);
-        rocksDBZSet.add("ns1", "thirty", 30L);
+        rocksDBZSet.add(ns, "two", 2L);
+        rocksDBZSet.add(ns, "one", 1L);
+        rocksDBZSet.add(ns, "three", 3L);
+        rocksDBZSet.add(ns, "four", 4L);
+        rocksDBZSet.add(ns, "ten", 10L);
+        rocksDBZSet.add(ns, "eight", 8L);
+        rocksDBZSet.add(ns, "seven", 7L);
+        rocksDBZSet.add(ns, "twentyone", 21L);
+        rocksDBZSet.add(ns, "twenty", 20L);
+        rocksDBZSet.add(ns, "twentytwo", 22L);
+        rocksDBZSet.add(ns, "thirty", 30L);
 
-        var iterator = rocksDBZSet.membersInRangeIterator("ns1", 7L, 21L);
+        var iterator = rocksDBZSet.membersInRangeIterator(ns, 7L, 21L);
 
         var membersWithScore = new ArrayList<>();
         while (iterator.hasNext()) {
@@ -262,19 +264,19 @@ class RocksMultiZSetTest extends RocksBaseTest {
     @Test
     void add_members_inrange_reverse_iterable() {
         RocksMultiZSet rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
-        rocksDBZSet.add("ns1", "two", 2L);
-        rocksDBZSet.add("ns1", "one", 1L);
-        rocksDBZSet.add("ns1", "three", 3L);
-        rocksDBZSet.add("ns1", "four", 4L);
-        rocksDBZSet.add("ns1", "ten", 10L);
-        rocksDBZSet.add("ns1", "eight", 8L);
-        rocksDBZSet.add("ns1", "seven", 7L);
-        rocksDBZSet.add("ns1", "twentyone", 21L);
-        rocksDBZSet.add("ns1", "twenty", 20L);
-        rocksDBZSet.add("ns1", "twentytwo", 22L);
-        rocksDBZSet.add("ns1", "thirty", 30L);
+        rocksDBZSet.add(ns, "two", 2L);
+        rocksDBZSet.add(ns, "one", 1L);
+        rocksDBZSet.add(ns, "three", 3L);
+        rocksDBZSet.add(ns, "four", 4L);
+        rocksDBZSet.add(ns, "ten", 10L);
+        rocksDBZSet.add(ns, "eight", 8L);
+        rocksDBZSet.add(ns, "seven", 7L);
+        rocksDBZSet.add(ns, "twentyone", 21L);
+        rocksDBZSet.add(ns, "twenty", 20L);
+        rocksDBZSet.add(ns, "twentytwo", 22L);
+        rocksDBZSet.add(ns, "thirty", 30L);
 
-        var iterator = rocksDBZSet.membersInRangeReverseIterator("ns1", 7L, 2L);
+        var iterator = rocksDBZSet.membersInRangeReverseIterator(ns, 7L, 2L);
 
         var membersWithScore = new ArrayList<>();
         while (iterator.hasPrev()) {
@@ -292,19 +294,19 @@ class RocksMultiZSetTest extends RocksBaseTest {
     @Test
     void add_membersWithScores_iterable() {
         RocksMultiZSet<String> rocksDBZSet = new RocksMultiZSet(rocksDBConfig, "zset1", "names", String.class);
-        rocksDBZSet.add("ns1", "two", 2L);
-        rocksDBZSet.add("ns1", "one", 1L);
-        rocksDBZSet.add("ns1", "three", 3L);
-        rocksDBZSet.add("ns1", "four", 4L);
-        rocksDBZSet.add("ns1", "ten", 10L);
-        rocksDBZSet.add("ns1", "eight", 8L);
-        rocksDBZSet.add("ns1", "seven", 7L);
-        rocksDBZSet.add("ns1", "twentyone", 21L);
-        rocksDBZSet.add("ns1", "twenty", 20L);
-        rocksDBZSet.add("ns1", "twentytwo", 22L);
-        rocksDBZSet.add("ns1", "thirty", 30L);
+        rocksDBZSet.add(ns, "two", 2L);
+        rocksDBZSet.add(ns, "one", 1L);
+        rocksDBZSet.add(ns, "three", 3L);
+        rocksDBZSet.add(ns, "four", 4L);
+        rocksDBZSet.add(ns, "ten", 10L);
+        rocksDBZSet.add(ns, "eight", 8L);
+        rocksDBZSet.add(ns, "seven", 7L);
+        rocksDBZSet.add(ns, "twentyone", 21L);
+        rocksDBZSet.add(ns, "twenty", 20L);
+        rocksDBZSet.add(ns, "twentytwo", 22L);
+        rocksDBZSet.add(ns, "thirty", 30L);
 
-        var iterator = rocksDBZSet.membersWithScoresIterator("ns1");
+        var iterator = rocksDBZSet.membersWithScoresIterator(ns);
 
         var membersWithScore = new ArrayList<Tuple<String, Long>>();
         while (iterator.hasNext()) {
@@ -327,7 +329,7 @@ class RocksMultiZSetTest extends RocksBaseTest {
         String address = "addr_test1vzpwq95z3xyum8vqndgdd9mdnmafh3djcxnc6jemlgdmswcve6tkw";
         BigInteger amount = BigInteger.valueOf(10638239);
 
-        String ns = address + "_" + "lovelace";
+        byte[] ns = (address + "_" + "lovelace").getBytes(StandardCharsets.UTF_8);
         RocksMultiZSet<byte[]> zset = new RocksMultiZSet<>(rocksDBConfig, "zset", "test", byte[].class);
 
         zset.add(ns, getAddressBalanceKey(address , "lovelace", 10634820), 10634820L);

@@ -7,7 +7,6 @@ import com.bloxbean.rocks.types.collection.util.ValueIterator;
 import com.bloxbean.rocks.types.common.KeyBuilder;
 import com.bloxbean.rocks.types.common.Tuple;
 import com.bloxbean.rocks.types.config.RocksDBConfig;
-import com.bloxbean.rocks.types.serializer.Serializer;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.rocksdb.RocksIterator;
@@ -38,24 +37,24 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    public void add(String ns, T member, Long score) {
+    public void add(byte[] ns, T member, Long score) {
         var metadata = createMetadata(ns).orElseThrow();
         add(ns, null, metadata, member, score);
     }
 
-    public void addBatch(String ns, WriteBatch writeBatch, Tuple<T, Long>... membersWithScores) {
+    public void addBatch(byte[] ns, WriteBatch writeBatch, Tuple<T, Long>... membersWithScores) {
         var metadata = createMetadata(ns).orElseThrow();
         for (var memberWithScore : membersWithScores) {
             add(ns, writeBatch, metadata, memberWithScore._1, memberWithScore._2);
         }
     }
 
-    private void add(String ns, WriteBatch writeBatch, SetMetadata metadata, T value, Long score) {
+    private void add(byte[] ns, WriteBatch writeBatch, SetMetadata metadata, T value, Long score) {
         write(writeBatch, getMemberSubKey(metadata, ns, value), valueSerializer.serialize(score));
         write(writeBatch, getScoreSubKey(metadata, ns, value, score), new byte[0]);
     }
 
-    public Optional<Long> getScore(String ns, T member) {
+    public Optional<Long> getScore(byte[] ns, T member) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return Optional.empty();
@@ -68,7 +67,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    public boolean contains(String ns, T member) {
+    public boolean contains(byte[] ns, T member) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return false;
@@ -78,7 +77,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    public void remove(String ns, T member) {
+    public void remove(byte[] ns, T member) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return;
@@ -88,7 +87,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    public void removeBatch(String ns, WriteBatch writeBatch, T... member) {
+    public void removeBatch(byte[] ns, WriteBatch writeBatch, T... member) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return;
@@ -96,7 +95,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
             delete(ns, writeBatch, metadata.get(), value);
     }
 
-    private void delete(String ns, WriteBatch writeBatch, SetMetadata metadata, T member) {
+    private void delete(byte[] ns, WriteBatch writeBatch, SetMetadata metadata, T member) {
         var score = getScore(ns, member);
         if (score.isPresent()) {
             deleteBatch(writeBatch, getMemberSubKey(metadata, ns, member));
@@ -105,7 +104,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    public Set<T> members(String ns) {
+    public Set<T> members(byte[] ns) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return Collections.emptySet();
@@ -128,7 +127,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    public Set<Tuple<T, Long>> membersWithScores(String ns) {
+    public Set<Tuple<T, Long>> membersWithScores(byte[] ns) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return Collections.emptySet();
@@ -150,7 +149,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
         return members;
     }
 
-    public List<Tuple<T, Long>> membersInRange(String ns, long beginningScore, long endScore) {
+    public List<Tuple<T, Long>> membersInRange(byte[] ns, long beginningScore, long endScore) {
         //Iterate over the range of scores
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
@@ -178,37 +177,37 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
         return members;
     }
 
-    public ValueIterator<Tuple<T, Long>> membersWithScoresIterator(String ns) {
+    public ValueIterator<Tuple<T, Long>> membersWithScoresIterator(byte[] ns) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty()) {
             return new EmptyIterator<>();
         }
         byte[] prefix = getMemberSubKey(metadata.get(), ns, null);
-        return new ZSetMembersIterator<>(iterator(), prefix, valueSerializer, valueType);
+        return new ZSetMembersIterator<>(iterator(), prefix);
     }
 
-    public ValueIterator<Tuple<T, Long>> membersInRangeIterator(String ns, long beginningScore, long endScore) {
+    public ValueIterator<Tuple<T, Long>> membersInRangeIterator(byte[] ns, long beginningScore, long endScore) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty()) {
             return new EmptyIterator<>();
         }
         byte[] prefixWithoutScore = getScoreSubKeyPrefix(metadata.get(), ns);
-        return new ZSetRangeIterator(iterator(), prefixWithoutScore, beginningScore, endScore,
-                valueSerializer, valueType);
+        return new ZSetRangeIterator(iterator(), prefixWithoutScore, beginningScore, endScore
+        );
     }
 
-    public ReverseValueIterator<Tuple<T, Long>> membersInRangeReverseIterator(String ns, long startScore, long endScore) {
+    public ReverseValueIterator<Tuple<T, Long>> membersInRangeReverseIterator(byte[] ns, long startScore, long endScore) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty()) {
             return new EmptyIterator<>();
         }
         byte[] prefixWithoutScore = getScoreSubKeyPrefix(metadata.get(), ns);
-        return new ZSetReverseRangeIterator(iterator(), prefixWithoutScore, startScore, endScore,
-                valueSerializer, valueType);
+        return new ZSetReverseRangeIterator(iterator(), prefixWithoutScore, startScore, endScore
+        );
     }
 
     @SneakyThrows
-    protected Optional<SetMetadata> getMetadata(String ns) {
+    protected Optional<SetMetadata> getMetadata(byte[] ns) {
         byte[] metadataKeyName = getMetadataKey(ns);
         var metadataValueBytes = get(metadataKeyName);
         if (metadataValueBytes == null || metadataValueBytes.length == 0) {
@@ -219,7 +218,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     }
 
     @Override
-    protected Optional<SetMetadata> createMetadata(String ns) {
+    protected Optional<SetMetadata> createMetadata(byte[] ns) {
         byte[] metadataKeyName = getMetadataKey(ns);
         var metadata = getMetadata(ns);
         if (metadata.isEmpty()) {
@@ -232,7 +231,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
         }
     }
 
-    protected byte[] getMetadataKey(String ns) {
+    protected byte[] getMetadataKey(byte[] ns) {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .build();
@@ -241,7 +240,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
                     .build();
     }
 
-    private byte[] getMemberSubKey(SetMetadata metadata, String ns, T member) {
+    private byte[] getMemberSubKey(SetMetadata metadata, byte[] ns, T member) {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .append(metadata.getVersion())
@@ -256,7 +255,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
                     .build();
     }
 
-    public byte[] getScoreSubKey(SetMetadata metadata, String ns, T member, long score) {
+    public byte[] getScoreSubKey(SetMetadata metadata, byte[] ns, T member, long score) {
         byte[] scorePrefix = getScoreSubKeyPrefix(metadata, ns);
         var key = KeyBuilder.appendToKey(scorePrefix, longToBytes(score), valueSerializer.serialize(member));
 
@@ -264,7 +263,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     }
 
     //This is without score
-    private byte[] getScoreSubKeyPrefix(SetMetadata metadata, String ns) {
+    private byte[] getScoreSubKeyPrefix(SetMetadata metadata, byte[] ns) {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .append(metadata.getVersion())
@@ -293,20 +292,14 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
         private final RocksIterator iterator;
         private final byte[] prefixWithoutScore;
         private final long endScore;
-        private final Serializer valueSerializer;
-        private final Class<T> valueType;
 
         public ZSetRangeIterator(@NonNull RocksIterator iterator,
                                  @NonNull byte[] prefixWithoutScore,
                                  long beginningScore,
-                                 long endScore,
-                                 @NonNull Serializer valueSerializer,
-                                 @NonNull Class<T> valueType) {
+                                 long endScore) {
             this.iterator = iterator;
             this.prefixWithoutScore = prefixWithoutScore;
             this.endScore = endScore;
-            this.valueSerializer = valueSerializer;
-            this.valueType = valueType;
             byte[] prefix = KeyBuilder.appendToKey(prefixWithoutScore, longToBytes(beginningScore));
             this.iterator.seek(prefix);
         }
@@ -347,17 +340,11 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
     private class ZSetMembersIterator<T> implements ValueIterator<Tuple<T, Long>> {
         private final RocksIterator iterator;
         private final byte[] prefix;
-        private final Serializer valueSerializer;
-        private final Class<T> valueType;
 
         public ZSetMembersIterator(@NonNull RocksIterator rocksIterator,
-                                   @NonNull byte[] prefix,
-                                   @NonNull Serializer valueSerializer,
-                                   @NonNull Class<T> valueType) {
+                                   @NonNull byte[] prefix) {
             this.iterator = rocksIterator;
             this.prefix = prefix;
-            this.valueSerializer = valueSerializer;
-            this.valueType = valueType;
             this.iterator.seek(prefix);
         }
 
@@ -397,21 +384,15 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
         private final byte[] prefixWithoutScore;
         private final long startScore; // Score to start iterating from, in reverse
         private final long endScore;
-        private final Serializer valueSerializer;
-        private final Class<T> valueType;
 
         public ZSetReverseRangeIterator(@NonNull RocksIterator iterator,
                                         @NonNull byte[] prefixWithoutScore,
                                         long startScore, // Score to start iterating from, in reverse
-                                        long endScore,
-                                        @NonNull Serializer valueSerializer,
-                                        @NonNull Class<T> valueType) {
+                                        long endScore) {
             this.iterator = iterator;
             this.prefixWithoutScore = prefixWithoutScore;
             this.startScore = startScore;
             this.endScore = endScore;
-            this.valueSerializer = valueSerializer;
-            this.valueType = valueType;
 
             // Seek to the starting position for reverse iteration
             //to include start score in the result
