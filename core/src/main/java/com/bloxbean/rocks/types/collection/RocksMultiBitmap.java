@@ -41,12 +41,12 @@ public class RocksMultiBitmap extends BaseDataType {
         this.fragmentSize = fragmentSize;
     }
 
-    public void setBit(String ns, int bitIndex) {
+    public void setBit(byte[] ns, int bitIndex) {
         var metadata = createMetadata(ns).orElseThrow();
         setBit(ns, null, metadata, bitIndex);
     }
 
-    public void setBitBatch(String ns, WriteBatch writeBatch, int... bitIndexes) {
+    public void setBitBatch(byte[] ns, WriteBatch writeBatch, int... bitIndexes) {
         var metadata = createMetadata(ns).orElseThrow();
         for (int bitIndex : bitIndexes) {
             setBit(ns, writeBatch, metadata, bitIndex);
@@ -54,7 +54,7 @@ public class RocksMultiBitmap extends BaseDataType {
     }
 
     @SneakyThrows
-    private void setBit(String ns, WriteBatch writeBatch, BitmapMetadata metadata, int bitIndex) {
+    private void setBit(byte[] ns, WriteBatch writeBatch, BitmapMetadata metadata, int bitIndex) {
 
         int fragmentIndex = bitIndex / fragmentSize;
         int fragmentBitIndex = bitIndex % fragmentSize;
@@ -96,12 +96,12 @@ public class RocksMultiBitmap extends BaseDataType {
         return bitSet;
     }
 
-    public void clearBit(String ns, int bitIndex) {
+    public void clearBit(byte[] ns, int bitIndex) {
         var metadata = createMetadata(ns).orElseThrow();
         clearBit(ns, null, metadata, bitIndex);
     }
 
-    public void clearBitBatch(String ns, WriteBatch writeBatch, int... bitIndexes) {
+    public void clearBitBatch(byte[] ns, WriteBatch writeBatch, int... bitIndexes) {
         var metadata = createMetadata(ns).orElseThrow();
         for (int bitIndex : bitIndexes) {
             clearBit(ns, writeBatch, metadata, bitIndex);
@@ -109,7 +109,7 @@ public class RocksMultiBitmap extends BaseDataType {
     }
 
     @SneakyThrows
-    private void clearBit(String ns, WriteBatch writeBatch, BitmapMetadata metadata, int bitIndex) {
+    private void clearBit(byte[] ns, WriteBatch writeBatch, BitmapMetadata metadata, int bitIndex) {
 
         int fragmentIndex = bitIndex / fragmentSize;
         int fragmentBitIndex = bitIndex % fragmentSize;
@@ -129,13 +129,13 @@ public class RocksMultiBitmap extends BaseDataType {
         write(writeBatch, keyBytes, serializedBytes);
     }
 
-    public boolean getBit(String ns, int bitIndex) {
+    public boolean getBit(byte[] ns, int bitIndex) {
         var metadata = getMetadata(ns).orElseThrow();
         return getBit(ns, metadata, bitIndex);
     }
 
     @SneakyThrows
-    private boolean getBit(String ns, BitmapMetadata metadata, int bitIndex) {
+    private boolean getBit(byte[] ns, BitmapMetadata metadata, int bitIndex) {
 
         int fragmentIndex = bitIndex / fragmentSize;
         int fragmentBitIndex = bitIndex % fragmentSize;
@@ -152,13 +152,13 @@ public class RocksMultiBitmap extends BaseDataType {
     }
 
     //Get all the bits set in the bitmap in all fragments
-    public RoaringBitmap getAllBits(String ns) {
+    public RoaringBitmap getAllBits(byte[] ns) {
         var metadata = getMetadata(ns).orElseThrow();
         return getAllBits(ns, metadata);
     }
 
     @SneakyThrows
-    private RoaringBitmap getAllBits(String ns, BitmapMetadata metadata) {
+    private RoaringBitmap getAllBits(byte[] ns, BitmapMetadata metadata) {
         RoaringBitmap roaringBitmap = null;
         for (int i = 0; i <= metadata.getMaxFragmentIndex(); i++) {
             byte[] keyBytes = getKey(metadata, ns, i);
@@ -182,13 +182,13 @@ public class RocksMultiBitmap extends BaseDataType {
         return roaringBitmap;
     }
 
-    public RoaringBitmap getBits(String ns, int fromFragmentIndex, int toFragmentIndex) {
+    public RoaringBitmap getBits(byte[] ns, int fromFragmentIndex, int toFragmentIndex) {
         var metadata = getMetadata(ns).orElseThrow();
         return getBits(ns, metadata, fromFragmentIndex, toFragmentIndex);
     }
 
     @SneakyThrows
-    private RoaringBitmap getBits(String ns, BitmapMetadata metadata, int fromFragmentIndex, int toFragmentIndex) {
+    private RoaringBitmap getBits(byte[] ns, BitmapMetadata metadata, int fromFragmentIndex, int toFragmentIndex) {
         RoaringBitmap roaringBitmap = null;
         for (int i = fromFragmentIndex; i <= toFragmentIndex; i++) {
             byte[] keyBytes = getKey(metadata, ns, i);
@@ -212,13 +212,13 @@ public class RocksMultiBitmap extends BaseDataType {
         return roaringBitmap;
     }
 
-    public long nextSetBit(String ns, int fromIndex) {
+    public long nextSetBit(byte[] ns, int fromIndex) {
         var metadata = getMetadata(ns).orElseThrow();
         return nextSetBit(ns, metadata, fromIndex);
     }
 
     @SneakyThrows
-    private long nextSetBit(String ns, BitmapMetadata metadata, int fromIndex) {
+    private long nextSetBit(byte[] ns, BitmapMetadata metadata, int fromIndex) {
         int fragmentIndex = fromIndex / fragmentSize;
         int fragmentBitIndex = fromIndex % fragmentSize;
 
@@ -254,13 +254,13 @@ public class RocksMultiBitmap extends BaseDataType {
         return -1;
     }
 
-    public long nextClearBit(String ns, int fromIndex) {
+    public long nextClearBit(byte[] ns, int fromIndex) {
         var metadata = getMetadata(ns).orElseThrow();
         return nextClearBit(ns, metadata, fromIndex);
     }
 
     @SneakyThrows
-    private long nextClearBit(String ns, BitmapMetadata metadata, int fromIndex) {
+    private long nextClearBit(byte[] ns, BitmapMetadata metadata, int fromIndex) {
         int fragmentIndex = fromIndex / fragmentSize;
         int fragmentBitIndex = fromIndex % fragmentSize;
 
@@ -296,13 +296,13 @@ public class RocksMultiBitmap extends BaseDataType {
         return -1;
     }
 
-    public long previousSetBit(String ns, int fromIndex) {
+    public long previousSetBit(byte[] ns, int fromIndex) {
         var metadata = getMetadata(ns).orElseThrow();
         return previousSetBit(ns, metadata, fromIndex);
     }
 
     @SneakyThrows
-    private long previousSetBit(String ns, BitmapMetadata metadata, int fromIndex) {
+    private long previousSetBit(byte[] ns, BitmapMetadata metadata, int fromIndex) {
         int fragmentIndex = fromIndex / fragmentSize;
         int fragmentBitIndex = fromIndex % fragmentSize;
 
@@ -340,13 +340,13 @@ public class RocksMultiBitmap extends BaseDataType {
         return -1;
     }
 
-    public long previousClearBit(String ns, int fromIndex) {
+    public long previousClearBit(byte[] ns, int fromIndex) {
         var metadata = getMetadata(ns).orElseThrow();
         return previousClearBit(ns, metadata, fromIndex);
     }
 
     @SneakyThrows
-    private long previousClearBit(String ns, BitmapMetadata metadata, int fromIndex) {
+    private long previousClearBit(byte[] ns, BitmapMetadata metadata, int fromIndex) {
         int fragmentIndex = fromIndex / fragmentSize;
         int fragmentBitIndex = fromIndex % fragmentSize;
 
@@ -385,14 +385,14 @@ public class RocksMultiBitmap extends BaseDataType {
     }
 
     @SneakyThrows
-    private BitmapMetadata updateMetadata(WriteBatch writeBatch, BitmapMetadata metadata, String ns) {
+    private BitmapMetadata updateMetadata(WriteBatch writeBatch, BitmapMetadata metadata, byte[] ns) {
         var metadataKeyName = getMetadataKey(ns);
         write(writeBatch, metadataKeyName, valueSerializer.serialize(metadata));
         return metadata;
     }
 
     @SneakyThrows
-    protected Optional<BitmapMetadata> getMetadata(String ns) {
+    protected Optional<BitmapMetadata> getMetadata(byte[] ns) {
         byte[] metadataKeyName = getMetadataKey(ns);
         var metadataValueBytes = get(metadataKeyName);
         if (metadataValueBytes == null || metadataValueBytes.length == 0) {
@@ -403,7 +403,7 @@ public class RocksMultiBitmap extends BaseDataType {
     }
 
     @Override
-    protected Optional<BitmapMetadata> createMetadata(String ns) {
+    protected Optional<BitmapMetadata> createMetadata(byte[] ns) {
         byte[] metadataKeyName = getMetadataKey(ns);
         var metadata = getMetadata(ns);
         if (metadata.isEmpty()) {
@@ -416,7 +416,7 @@ public class RocksMultiBitmap extends BaseDataType {
         }
     }
 
-    protected byte[] getMetadataKey(String ns) {
+    protected byte[] getMetadataKey(byte[] ns) {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .build();
@@ -425,7 +425,7 @@ public class RocksMultiBitmap extends BaseDataType {
                     .build();
     }
 
-    private byte[] getKey(BitmapMetadata metadata, String ns, int fragmentIndex) {
+    private byte[] getKey(BitmapMetadata metadata, byte[] ns, int fragmentIndex) {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .append(metadata.getVersion())

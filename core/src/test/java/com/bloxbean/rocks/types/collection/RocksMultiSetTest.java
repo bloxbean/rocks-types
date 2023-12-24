@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -11,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class RocksMultiSetTest extends RocksBaseTest {
+    byte[] ns = "ns1".getBytes();
+    byte[] ns2 = "ns2".getBytes();
 
     @Override
     public String getColumnFamilies() {
@@ -20,35 +23,33 @@ class RocksMultiSetTest extends RocksBaseTest {
     @Test
     void addAndContains() {
         RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
-        String list1 = "list1";
-        rocksDBSet.add(list1, "one");
-        rocksDBSet.add(list1, "two");
-        rocksDBSet.add(list1, "one");
-        rocksDBSet.add(list1, "nine");
+        rocksDBSet.add(ns, "one");
+        rocksDBSet.add(ns, "two");
+        rocksDBSet.add(ns, "one");
+        rocksDBSet.add(ns, "nine");
 
-        String list2 = "list2";
-        rocksDBSet.add(list2, "aaa");
-        rocksDBSet.add(list2, "bbb");
-        rocksDBSet.add(list2, "ccc");
-        rocksDBSet.add(list2, "ddd");
+        rocksDBSet.add(ns2, "aaa");
+        rocksDBSet.add(ns2, "bbb");
+        rocksDBSet.add(ns2, "ccc");
+        rocksDBSet.add(ns2, "ddd");
 
-        assertTrue(rocksDBSet.contains(list1, "one"));
-        assertTrue(rocksDBSet.contains(list1, "two"));
-        assertFalse(rocksDBSet.contains(list1, "three"));
-        assertFalse(rocksDBSet.contains(list1, "four"));
-        assertTrue(rocksDBSet.contains(list1, "nine"));
-        assertFalse(rocksDBSet.contains(list1, "aaa"));
-        assertFalse(rocksDBSet.contains(list1, "bbb"));
-        assertFalse(rocksDBSet.contains(list1, "ccc"));
-        assertFalse(rocksDBSet.contains(list1, "ddd"));
+        assertTrue(rocksDBSet.contains(ns, "one"));
+        assertTrue(rocksDBSet.contains(ns, "two"));
+        assertFalse(rocksDBSet.contains(ns, "three"));
+        assertFalse(rocksDBSet.contains(ns, "four"));
+        assertTrue(rocksDBSet.contains(ns, "nine"));
+        assertFalse(rocksDBSet.contains(ns, "aaa"));
+        assertFalse(rocksDBSet.contains(ns, "bbb"));
+        assertFalse(rocksDBSet.contains(ns, "ccc"));
+        assertFalse(rocksDBSet.contains(ns, "ddd"));
 
-        assertTrue(rocksDBSet.contains(list2, "aaa"));
-        assertTrue(rocksDBSet.contains(list2, "bbb"));
-        assertTrue(rocksDBSet.contains(list2, "ccc"));
-        assertTrue(rocksDBSet.contains(list2, "ddd"));
-        assertFalse(rocksDBSet.contains(list2, "one"));
-        assertFalse(rocksDBSet.contains(list2, "two"));
-        assertFalse(rocksDBSet.contains(list2, "nine"));
+        assertTrue(rocksDBSet.contains(ns2, "aaa"));
+        assertTrue(rocksDBSet.contains(ns2, "bbb"));
+        assertTrue(rocksDBSet.contains(ns2, "ccc"));
+        assertTrue(rocksDBSet.contains(ns2, "ddd"));
+        assertFalse(rocksDBSet.contains(ns2, "one"));
+        assertFalse(rocksDBSet.contains(ns2, "two"));
+        assertFalse(rocksDBSet.contains(ns2, "nine"));
     }
 
     @Test
@@ -56,37 +57,35 @@ class RocksMultiSetTest extends RocksBaseTest {
         RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
         WriteBatch writeBatch = new WriteBatch();
 
-        String list1 = "list1";
-        rocksDBSet.addBatch(list1, writeBatch, "one");
-        rocksDBSet.addBatch(list1, writeBatch, "two");
-        rocksDBSet.addBatch(list1, writeBatch, "one");
-        rocksDBSet.addBatch(list1, writeBatch, "nine");
+        rocksDBSet.addBatch(ns, writeBatch, "one");
+        rocksDBSet.addBatch(ns, writeBatch, "two");
+        rocksDBSet.addBatch(ns, writeBatch, "one");
+        rocksDBSet.addBatch(ns, writeBatch, "nine");
 
-        String list2 = "list2";
-        rocksDBSet.addBatch(list2, writeBatch, "aaa");
-        rocksDBSet.addBatch(list2, writeBatch, "bbb");
-        rocksDBSet.addBatch(list2, writeBatch, "ccc");
-        rocksDBSet.addBatch(list2, writeBatch,"ddd");
+        rocksDBSet.addBatch(ns2, writeBatch, "aaa");
+        rocksDBSet.addBatch(ns2, writeBatch, "bbb");
+        rocksDBSet.addBatch(ns2, writeBatch, "ccc");
+        rocksDBSet.addBatch(ns2, writeBatch,"ddd");
 
         rocksDBConfig.getRocksDB().write(new WriteOptions(), writeBatch);
 
-        assertTrue(rocksDBSet.contains(list1, "one"));
-        assertTrue(rocksDBSet.contains(list1, "two"));
-        assertFalse(rocksDBSet.contains(list1, "three"));
-        assertFalse(rocksDBSet.contains(list1, "four"));
-        assertTrue(rocksDBSet.contains(list1, "nine"));
-        assertFalse(rocksDBSet.contains(list1, "aaa"));
-        assertFalse(rocksDBSet.contains(list1, "bbb"));
-        assertFalse(rocksDBSet.contains(list1, "ccc"));
-        assertFalse(rocksDBSet.contains(list1, "ddd"));
+        assertTrue(rocksDBSet.contains(ns, "one"));
+        assertTrue(rocksDBSet.contains(ns, "two"));
+        assertFalse(rocksDBSet.contains(ns, "three"));
+        assertFalse(rocksDBSet.contains(ns, "four"));
+        assertTrue(rocksDBSet.contains(ns, "nine"));
+        assertFalse(rocksDBSet.contains(ns, "aaa"));
+        assertFalse(rocksDBSet.contains(ns, "bbb"));
+        assertFalse(rocksDBSet.contains(ns, "ccc"));
+        assertFalse(rocksDBSet.contains(ns, "ddd"));
 
-        assertTrue(rocksDBSet.contains(list2, "aaa"));
-        assertTrue(rocksDBSet.contains(list2, "bbb"));
-        assertTrue(rocksDBSet.contains(list2, "ccc"));
-        assertTrue(rocksDBSet.contains(list2, "ddd"));
-        assertFalse(rocksDBSet.contains(list2, "one"));
-        assertFalse(rocksDBSet.contains(list2, "two"));
-        assertFalse(rocksDBSet.contains(list2, "nine"));
+        assertTrue(rocksDBSet.contains(ns2, "aaa"));
+        assertTrue(rocksDBSet.contains(ns2, "bbb"));
+        assertTrue(rocksDBSet.contains(ns2, "ccc"));
+        assertTrue(rocksDBSet.contains(ns2, "ddd"));
+        assertFalse(rocksDBSet.contains(ns2, "one"));
+        assertFalse(rocksDBSet.contains(ns2, "two"));
+        assertFalse(rocksDBSet.contains(ns2, "nine"));
     }
 
     @Test
@@ -94,7 +93,7 @@ class RocksMultiSetTest extends RocksBaseTest {
         RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
         WriteBatch writeBatch = new WriteBatch();
 
-        String setName = "set1";
+        byte[] setName = "set1".getBytes(StandardCharsets.UTF_8);
         rocksDBSet.addBatch(setName, writeBatch, "one");
         rocksDBSet.addBatch(setName, writeBatch, "two");
         rocksDBSet.addBatch(setName, writeBatch, "one");
@@ -112,7 +111,7 @@ class RocksMultiSetTest extends RocksBaseTest {
     @Test
     void remove_batch() throws Exception {
         RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
-        String setName = "set2";
+        byte[] setName = "set2".getBytes(StandardCharsets.UTF_8);
         WriteBatch writeBatch = new WriteBatch();
         rocksDBSet.addBatch(setName, writeBatch, "one");
         rocksDBSet.addBatch(setName, writeBatch, "two");
@@ -131,7 +130,7 @@ class RocksMultiSetTest extends RocksBaseTest {
     @Test
     void members() {
         RocksMultiSet rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
-        String setName = "set3";
+        byte[] setName = "set3".getBytes(StandardCharsets.UTF_8);
         rocksDBSet.add(setName, "one");
         rocksDBSet.add(setName,"two");
         rocksDBSet.add(setName,"one");
@@ -146,7 +145,7 @@ class RocksMultiSetTest extends RocksBaseTest {
     void membersIterable() throws Exception {
         RocksMultiSet<String> rocksDBSet = new RocksMultiSet(rocksDBConfig, "list-cf", String.class);
 
-        String setName = "set1";
+        byte[] setName = "set1".getBytes(StandardCharsets.UTF_8);
         rocksDBSet.add(setName, "one");
         rocksDBSet.add(setName,"two");
         rocksDBSet.add(setName,"one");
@@ -155,7 +154,7 @@ class RocksMultiSetTest extends RocksBaseTest {
         rocksDBSet.add(setName,"eleven");
         rocksDBSet.add(setName,"twelve");
 
-        String setName2 = "set2";
+        byte[] setName2 = "set2".getBytes(StandardCharsets.UTF_8);
         rocksDBSet.add(setName2, "13");
         rocksDBSet.add(setName2,"14");
         rocksDBSet.add(setName2,"15");

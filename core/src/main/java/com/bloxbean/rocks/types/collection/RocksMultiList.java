@@ -24,19 +24,19 @@ public class RocksMultiList<T> extends BaseDataType<T> {
         super(rocksDBConfig, name, valueType);
     }
 
-    public void add(String ns, T value) {
+    public void add(byte[] ns, T value) {
         var metadata = createMetadata(ns).orElseThrow();
         add(ns, null, metadata, value);
     }
 
-    public void addBatch(String ns, WriteBatch writeBatch, T... value) {
+    public void addBatch(byte[] ns, WriteBatch writeBatch, T... value) {
         var metadata = createMetadata(ns).orElseThrow();
         for (T val : value)
             add(ns, writeBatch, metadata, val);
     }
 
     @SneakyThrows
-    private void add(String ns, WriteBatch writeBatch, @NonNull ListMetadata metadata, T value) {
+    private void add(byte[] ns, WriteBatch writeBatch, @NonNull ListMetadata metadata, T value) {
         long index = metadata.getSize(); // Get the current length of the list
         byte[] key = getSubKey(metadata, ns, index);
         write(writeBatch, key, valueSerializer.serialize(value));
@@ -44,7 +44,7 @@ public class RocksMultiList<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    public T get(String ns, long index) {
+    public T get(byte[] ns, long index) {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return null;
@@ -54,7 +54,7 @@ public class RocksMultiList<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    public long size(String ns) {
+    public long size(byte[] ns) {
         var metadata = getMetadata(ns);
         if (metadata.isPresent()) {
             return metadata.get().getSize();
@@ -64,7 +64,7 @@ public class RocksMultiList<T> extends BaseDataType<T> {
     }
 
     @Override
-    protected Optional<ListMetadata> createMetadata(String ns) {
+    protected Optional<ListMetadata> createMetadata(byte[] ns) {
         var metadataKeyName = getMetadataKey(ns);
         var metadata = getMetadata(ns);
         if (!metadata.isPresent()) {
@@ -79,7 +79,7 @@ public class RocksMultiList<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    private ListMetadata updateMetadata(WriteBatch writeBatch, ListMetadata metadata, String ns, byte[] currentKey) {
+    private ListMetadata updateMetadata(WriteBatch writeBatch, ListMetadata metadata, byte[] ns, byte[] currentKey) {
         var metadataKeyName = getMetadataKey(ns);
         metadata.setSize(metadata.getSize() + 1);
         metadata.setTail(currentKey);
@@ -88,7 +88,7 @@ public class RocksMultiList<T> extends BaseDataType<T> {
     }
 
     @SneakyThrows
-    protected Optional<ListMetadata> getMetadata(String ns) {
+    protected Optional<ListMetadata> getMetadata(byte[] ns) {
         byte[] metadataKeyName = getMetadataKey(ns);
         var metadataValueBytes = get(metadataKeyName);
         if (metadataValueBytes == null || metadataValueBytes.length == 0) {
@@ -98,7 +98,7 @@ public class RocksMultiList<T> extends BaseDataType<T> {
         }
     }
 
-    protected byte[] getMetadataKey(String ns) {
+    protected byte[] getMetadataKey(byte[] ns) {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .build();
@@ -107,7 +107,7 @@ public class RocksMultiList<T> extends BaseDataType<T> {
                     .build();
     }
 
-    private byte[] getSubKey(ListMetadata currentMetadata, String ns, long index) {
+    private byte[] getSubKey(ListMetadata currentMetadata, byte[] ns, long index) {
         if (ns != null)
             return new KeyBuilder(name, ns)
                     .append(currentMetadata.getVersion())

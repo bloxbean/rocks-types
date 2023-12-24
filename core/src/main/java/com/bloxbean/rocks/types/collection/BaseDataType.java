@@ -38,8 +38,8 @@ abstract class BaseDataType<T> {
         this.valueType = valueType;
     }
 
-    protected abstract Optional<? extends TypeMetadata> createMetadata(String ns);
-    protected abstract Optional<? extends TypeMetadata> getMetadata(String ns);
+    protected abstract Optional<? extends TypeMetadata> createMetadata(byte[] ns);
+    protected abstract Optional<? extends TypeMetadata> getMetadata(byte[] ns);
 
     protected void write(WriteBatch writeBatch, byte[] key, byte[] value) {
         if (writeBatch != null) {

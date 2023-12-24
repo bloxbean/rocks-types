@@ -10,53 +10,80 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class KeyBuilder {
-    private static final byte SEPARATOR = ':';
-    private String name;
-    private String ns;
-    private ByteBuffer byteBuffer;
     private List<byte[]> parts = new ArrayList<>();
 
     public KeyBuilder(@NonNull String name) {
-        this.name = name;
+        addPart(name.getBytes(StandardCharsets.UTF_8));
+    }
 
-        var nameBytes = name.getBytes(StandardCharsets.UTF_8);
-        parts.add(nameBytes);
+    public KeyBuilder(@NonNull byte[] name) {
+        addPart(name);
     }
 
     public KeyBuilder(@NonNull String name, @NonNull String ns) {
-        this.name = name;
-        this.ns = ns;
-
-        var nameBytes = name.getBytes(StandardCharsets.UTF_8);
-        var nsBytes = ns.getBytes(StandardCharsets.UTF_8);
-        parts.add(nameBytes);
-        parts.add(nsBytes);
+        addPart(name.getBytes(StandardCharsets.UTF_8));
+        addPart(ns.getBytes(StandardCharsets.UTF_8));
     }
 
-//    public KeyBuilder(byte[] key) {
-//        var keyBuilder = KeyBuilder.fromKey(key);
-//        this.parts = keyBuilder.parts;
-//    }
+    public KeyBuilder(@NonNull String name, @NonNull byte[] ns) {
+        addPart(name.getBytes(StandardCharsets.UTF_8));
+        addPart(ns);
+    }
+
+    public KeyBuilder(@NonNull byte[] name, @NonNull byte[] ns) {
+        addPart(name);
+        addPart(ns);
+    }
 
     public byte[] build() {
-        //merge name + ns + parts with prefix
-        byte[] buffer = new byte[parts.stream().mapToInt(a -> a.length).sum() + parts.size() - 1];
-        //give logic to merge byte arrays
-        int start = 0;
-        //loop through parts and merge with separator between each part
-        //Don't add separator for last part
-        int i = 0;
+        int totalLength = parts.stream().mapToInt(a -> Integer.BYTES + a.length).sum();
+        ByteBuffer buffer = ByteBuffer.allocate(totalLength);
+
         for (byte[] part : parts) {
-            System.arraycopy(part, 0, buffer, start, part.length);
-            start += part.length;
-            if (i < parts.size() - 1) {
-                buffer[start] = SEPARATOR;
-                start += 1;
-            }
-            i++;
+            buffer.putInt(part.length);
+            buffer.put(part);
         }
 
-        return buffer;
+        return buffer.array();
+    }
+
+    private void addPart(byte[] part) {
+        parts.add(part);
+    }
+
+    public KeyBuilder append(String str) {
+        if (str != null) {
+            addPart(str.getBytes(StandardCharsets.UTF_8));
+        }
+        return this;
+    }
+
+    public KeyBuilder append(byte[] bytes) {
+        if (bytes != null) {
+            addPart(bytes);
+        }
+        return this;
+    }
+
+    public KeyBuilder append(int value) {
+        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
+        buffer.putInt(value);
+        addPart(buffer.array());
+        return this;
+    }
+
+    public KeyBuilder append(long value) {
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(value);
+        addPart(buffer.array());
+        return this;
+    }
+
+    public KeyBuilder append(short value) {
+        ByteBuffer buffer = ByteBuffer.allocate(Short.BYTES);
+        buffer.putShort(value);
+        addPart(buffer.array());
+        return this;
     }
 
     //check if key has prefix and prefix is a byte array
@@ -77,92 +104,22 @@ public class KeyBuilder {
 
     public static byte[] appendToKey(byte[] key, byte[]... parts) {
         // Calculate the total length needed for the buffer
-        // Include the key, all parts, and a separator for each part (including one after the key)
-        int totalLength = key.length + 1 + Arrays.stream(parts).mapToInt(a -> a.length).sum() + parts.length - 1;
-        byte[] buffer = new byte[totalLength];
+        // Include the key and all parts, each prefixed with its length
+        int totalLength = key.length + Arrays.stream(parts).mapToInt(a -> Integer.BYTES + a.length).sum();
+        ByteBuffer buffer = ByteBuffer.allocate(totalLength);
 
         // Copy the key to the buffer
-        System.arraycopy(key, 0, buffer, 0, key.length);
+        buffer.put(key);
 
-        // Add a separator after the key
-        int start = key.length;
-        buffer[start++] = SEPARATOR;
-
-        // Loop through parts and merge with separator between each part
-        for (int i = 0; i < parts.length; i++) {
-            byte[] part = parts[i];
-            System.arraycopy(part, 0, buffer, start, part.length);
-            start += part.length;
-
-            // Add a separator after each part, except the last one
-            if (i < parts.length - 1) {
-                buffer[start++] = SEPARATOR;
-            }
+        // Loop through parts and add each with its length prefix
+        for (byte[] part : parts) {
+            buffer.putInt(part.length); // Prefix with length
+            buffer.put(part);           // Add the part
         }
 
-        return buffer;
+        return buffer.array();
     }
 
-    //split key into parts
-    public static List<byte[]> parts(byte[] key) {
-        List<byte[]> parts = new ArrayList<>();
-        int start = 0;
-
-        for (int i = 0; i < key.length; i++) {
-            if (key[i] == SEPARATOR) {
-                byte[] part = new byte[i - start];
-                System.arraycopy(key, start, part, 0, part.length);
-                parts.add(part);
-                start = i + 1;
-            }
-        }
-
-        // Add the last part if there's no separator at the end
-        if (start < key.length) {
-            byte[] part = new byte[key.length - start];
-            System.arraycopy(key, start, part, 0, part.length);
-            parts.add(part);
-        }
-
-        // If no separator found, return the original array in a list
-        if (parts.isEmpty()) {
-            parts.add(key);
-        }
-
-        return parts;
-    }
-
-
-    public KeyBuilder append(String str) {
-        if (str != null) {
-            parts.add(strToBytes(str));
-            return this;
-        } else {
-            return this;
-        }
-    }
-
-    public KeyBuilder append(byte[] bytes) {
-        if (bytes == null)
-            return this;
-        parts.add(bytes);
-        return this;
-    }
-
-    public KeyBuilder append(int value) {
-        parts.add(intToBytes(value));
-        return this;
-    }
-
-    public KeyBuilder append(long value) {
-        parts.add(longToBytes(value));
-        return this;
-    }
-
-    public KeyBuilder append(short value) {
-        parts.add(shortToBytes(value));
-        return this;
-    }
 
     public static byte[] intToBytes(final int i) {
         ByteBuffer bb = ByteBuffer.allocate(4);
@@ -211,19 +168,63 @@ public class KeyBuilder {
         return bb.getShort();
     }
 
-    //method to get sub array from key array by removing prefix and separator
-    public static byte[] removePrefix(byte[] key, byte[] prefix) {
-        if (key == null || prefix == null)
-            return null;
+    public static List<byte[]> decodeCompositeKey(byte[] compositeKey) {
+        List<byte[]> parts = new ArrayList<>();
+        ByteBuffer buffer = ByteBuffer.wrap(compositeKey);
 
-        if (key.length < prefix.length)
-            return null;
+        while (buffer.hasRemaining()) {
+            int length = buffer.getInt();
+            byte[] part = new byte[length];
+            buffer.get(part);
+            parts.add(part);
+        }
 
-        byte[] subArray = new byte[key.length - prefix.length - 1];
-        System.arraycopy(key, prefix.length + 1, subArray, 0, subArray.length);
-
-        return subArray;
+        return parts;
     }
+
+    /**
+    public static byte[] removePrefix(byte[] key, byte[] prefix) {
+        if (key == null || prefix == null) {
+            return null;
+        }
+
+        ByteBuffer keyBuffer = ByteBuffer.wrap(key);
+        ByteBuffer prefixBuffer = ByteBuffer.wrap(prefix);
+
+        while (prefixBuffer.hasRemaining() && keyBuffer.hasRemaining()) {
+            int prefixPartLength = prefixBuffer.getInt();
+            int keyPartLength = keyBuffer.getInt();
+
+            if (prefixPartLength != keyPartLength) {
+                // Lengths don't match, so this cannot be a prefix
+                return null;
+            }
+
+            byte[] prefixPart = new byte[prefixPartLength];
+            byte[] keyPart = new byte[keyPartLength];
+
+            prefixBuffer.get(prefixPart);
+            keyBuffer.get(keyPart);
+
+            if (!Arrays.equals(prefixPart, keyPart)) {
+                // Contents don't match, so this cannot be a prefix
+                return null;
+            }
+        }
+
+        // If we've consumed the entire prefix but there's still data in the key,
+        // then the prefix is valid. Return the remaining part of the key.
+        if (!prefixBuffer.hasRemaining() && keyBuffer.hasRemaining()) {
+            byte[] remainingKey = new byte[keyBuffer.remaining()];
+            keyBuffer.get(remainingKey);
+            return remainingKey;
+        }
+
+        // If both buffers are empty, or the key buffer is empty (but not the prefix),
+        // then the prefix is not valid.
+        return null;
+    }**/
+
 
     /**
      * Append two byte arrays
