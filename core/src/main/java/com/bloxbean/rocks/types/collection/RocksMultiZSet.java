@@ -118,9 +118,8 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
                 if (!KeyBuilder.hasPrefix(key, prefix)) {
                     break; // Break if the key no longer starts with the prefix
                 }
-                var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefix);
-                var parts = KeyBuilder.parts(keyWithoutPrefix);
-                T member = valueSerializer.deserialize(parts.get(0), valueType);
+
+                T member = getMemberFromMemberCompositeSubKey(key);
 
                 members.add(member);
             }
@@ -143,9 +142,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
                     break; // Break if the key no longer starts with the prefix
                 }
 
-                var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefix);
-                var parts = KeyBuilder.parts(keyWithoutPrefix);
-                T member = valueSerializer.deserialize(parts.get(0), valueType);
+                T member = getMemberFromMemberCompositeSubKey(key);
                 var score = valueSerializer.deserialize(iterator.value(), Long.class);
                 members.add(new Tuple<>(member, score));
             }
@@ -170,14 +167,11 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
                     break; // Break if the key no longer starts with the prefix
                 }
 
-                var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefixWithoutScore);
-                var parts = KeyBuilder.parts(keyWithoutPrefix);
-                long score = bytesToLong(parts.get(0));
-                T member = valueSerializer.deserialize(parts.get(1), valueType);
-                if (score > endScore)
+                Tuple<T, Long> memberAndScore = getMemberAndScoreFromScoreCompositeSubKey(key);
+                if (memberAndScore._2 > endScore)
                     break;
 
-                members.add(new Tuple<>(member, score));
+                members.add(memberAndScore);
             }
         }
 
@@ -283,6 +277,18 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
                     .build();
     }
 
+    private <T> T getMemberFromMemberCompositeSubKey(byte[] key) {
+        var parts = KeyBuilder.decodeCompositeKey(key);
+        return (T) valueSerializer.deserialize(parts.get(parts.size() - 1), valueType);
+    }
+
+    private Tuple<T, Long> getMemberAndScoreFromScoreCompositeSubKey(byte[] key) {
+        var parts = KeyBuilder.decodeCompositeKey(key);
+        long score = bytesToLong(parts.get(parts.size() - 2));
+        T member = valueSerializer.deserialize(parts.get(parts.size() - 1), valueType);
+        return new Tuple<>(member, score);
+    }
+
     private class ZSetRangeIterator<T> implements ValueIterator<Tuple<T, Long>> {
         private final RocksIterator iterator;
         private final byte[] prefixWithoutScore;
@@ -310,9 +316,8 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
             if (!iterator.isValid() || !KeyBuilder.hasPrefix(iterator.key(), prefixWithoutScore)) {
                 return false;
             }
-            var keyWithoutPrefix = KeyBuilder.removePrefix(iterator.key(), prefixWithoutScore);
-            var parts = KeyBuilder.parts(keyWithoutPrefix);
-            long score = bytesToLong(parts.get(0));
+
+            long score = getMemberAndScoreFromScoreCompositeSubKey(iterator.key())._2;
             return score <= endScore;
         }
 
@@ -324,12 +329,8 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
             byte[] key = iterator.key();
             iterator.next();
 
-            var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefixWithoutScore);
-            var parts = KeyBuilder.parts(keyWithoutPrefix);
-            long score = bytesToLong(parts.get(0));
-            T member = valueSerializer.deserialize(parts.get(1), valueType);
-
-            return new Tuple<>(member, score);
+            Tuple<T, Long> memberAndScore = (Tuple<T, Long>) getMemberAndScoreFromScoreCompositeSubKey(key);
+            return memberAndScore;
         }
 
         @Override
@@ -374,9 +375,7 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
             byte[] value = iterator.value();
             iterator.next();
 
-            var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefix);
-            var parts = KeyBuilder.parts(keyWithoutPrefix);
-            T member = valueSerializer.deserialize(parts.get(0), valueType);
+            T member = getMemberFromMemberCompositeSubKey(key);
             Long score = valueSerializer.deserialize(value, Long.class);
 
             return new Tuple<>(member, score);
@@ -425,9 +424,8 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
             if (!iterator.isValid() || !KeyBuilder.hasPrefix(iterator.key(), prefixWithoutScore)) {
                 return false;
             }
-            var keyWithoutPrefix = KeyBuilder.removePrefix(iterator.key(), prefixWithoutScore);
-            var parts = KeyBuilder.parts(keyWithoutPrefix);
-            long score = bytesToLong(parts.get(0));
+
+            long score = getMemberAndScoreFromScoreCompositeSubKey(iterator.key())._2;
             return score <= startScore && score >= endScore;
         }
 
@@ -439,12 +437,9 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
             byte[] key = iterator.key();
             iterator.prev(); // Move to the previous item
 
-            var keyWithoutPrefix = KeyBuilder.removePrefix(key, prefixWithoutScore);
-            var parts = KeyBuilder.parts(keyWithoutPrefix);
-            long score = bytesToLong(parts.get(0));
-            T member = valueSerializer.deserialize(parts.get(1), valueType);
+            Tuple<T, Long> memberAndScore = (Tuple<T, Long>) getMemberAndScoreFromScoreCompositeSubKey(key);
 
-            return new Tuple<>(member, score);
+            return memberAndScore;
         }
 
         @Override

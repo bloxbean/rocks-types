@@ -5,11 +5,14 @@ import org.junit.jupiter.api.Test;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.bloxbean.rocks.types.common.KeyBuilder.bytesToLong;
+import static com.bloxbean.rocks.types.common.KeyBuilder.longToBytes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -313,5 +316,34 @@ class RocksMultiZSetTest extends RocksBaseTest {
         assertThat(membersWithScore.stream().map(m -> m._1)
                 .collect(Collectors.toList()))
                 .contains("one", "two", "three", "four", "ten", "eight", "seven", "twentyone", "twenty", "twentytwo", "thirty");
+    }
+
+    @Test
+    void membersInRangeReverse() {
+        long l = 10636858L;
+        byte[] ls = longToBytes(l);
+        System.out.println(new String(ls));
+        System.out.println(bytesToLong(ls));
+        String address = "addr_test1vzpwq95z3xyum8vqndgdd9mdnmafh3djcxnc6jemlgdmswcve6tkw";
+        BigInteger amount = BigInteger.valueOf(10638239);
+
+        String ns = address + "_" + "lovelace";
+        RocksMultiZSet<byte[]> zset = new RocksMultiZSet<>(rocksDBConfig, "zset", "test", byte[].class);
+
+        zset.add(ns, getAddressBalanceKey(address , "lovelace", 10634820), 10634820L);
+        zset.add(ns, getAddressBalanceKey(address , "lovelace", 10634828), 10634828L);
+        zset.add(ns, getAddressBalanceKey(address , "lovelace", 10636858), 10636858L);
+
+        var iterator = zset.membersInRangeReverseIterator(ns, 10638239, 0);
+        var members = new ArrayList<Tuple<byte[], Long>>();
+        while (iterator.hasPrev()) {
+            members.add(iterator.prev());
+        }
+
+        assertThat(members).hasSize(3);
+    }
+
+    private static byte[] getAddressBalanceKey(String address, String lovelace, int i) {
+        return (address + "_" + lovelace + "_" + i).getBytes();
     }
 }

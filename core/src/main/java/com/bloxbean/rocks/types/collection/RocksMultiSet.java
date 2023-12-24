@@ -95,8 +95,8 @@ public class RocksMultiSet<T> extends BaseDataType<T> {
                     break; // Break if the key no longer starts with the prefix
                 }
 
-                var memberBytes = KeyBuilder.removePrefix(key, prefix);
-                T member = valueSerializer.deserialize(memberBytes, valueType);
+                var parts = KeyBuilder.decodeCompositeKey(key);
+                T member = valueSerializer.deserialize(parts.get(parts.size() - 1), valueType);
                 members.add(member);
             }
         }
@@ -160,6 +160,11 @@ public class RocksMultiSet<T> extends BaseDataType<T> {
                     .build();
     }
 
+    private T getMemberFromCompositeSubKey(byte[] key) {
+        var parts = KeyBuilder.decodeCompositeKey(key);
+        return valueSerializer.deserialize(parts.get(parts.size() - 1), valueType);
+    }
+
     private class SetIterator<T> implements ValueIterator<T> {
         private final RocksIterator iterator;
         private final byte[] prefix;
@@ -190,7 +195,7 @@ public class RocksMultiSet<T> extends BaseDataType<T> {
             }
             byte[] key = iterator.key();
             iterator.next();
-            return valueSerializer.deserialize(KeyBuilder.removePrefix(key, prefix), valueType);
+            return (T) getMemberFromCompositeSubKey(key);
         }
 
         @Override

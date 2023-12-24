@@ -129,8 +129,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
 
                 byte[] valueBytes = iterator.value();
 
-                var keyBytes = KeyBuilder.removePrefix(key, prefix);
-                K keyObj = valueSerializer.deserialize(keyBytes, keyType);
+                K keyObj = getKeyFromCompositeKey(key);
                 V valueObj = valueSerializer.deserialize(valueBytes, valueType);
 
                 members.add(new AbstractMap.SimpleEntry<>(keyObj, valueObj));
@@ -206,6 +205,12 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
                     .build();
     }
 
+    private K getKeyFromCompositeKey(byte[] compositeKey) {
+        List<byte[]> parts = KeyBuilder.decodeCompositeKey(compositeKey);
+        //last part is the key
+        return valueSerializer.deserialize(parts.get(parts.size() - 1), keyType);
+    }
+
     private class MapIterator implements ValueIterator<Map.Entry<K, V>> {
         private final RocksIterator iterator;
         private final byte[] prefix;
@@ -230,8 +235,7 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
             byte[] valueBytes = iterator.value();
             iterator.next();
 
-            var keyBytes = KeyBuilder.removePrefix(key, prefix);
-            K keyObj = valueSerializer.deserialize(keyBytes, keyType);
+            K keyObj = getKeyFromCompositeKey(key);
             V valueObj = valueSerializer.deserialize(valueBytes, valueType);
 
             return new AbstractMap.SimpleEntry<>(keyObj, valueObj);
