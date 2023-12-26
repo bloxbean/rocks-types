@@ -237,4 +237,25 @@ class RocksZSetTest extends RocksBaseTest {
         assertThat(membersWithScore.get(2)).isEqualTo(new Tuple<>("three", 3L));
         assertThat(membersWithScore.get(3)).isEqualTo(new Tuple<>("two", 2L));
     }
+
+    @Test
+    void add_membersWithScores_iterable_skip() {
+        RocksZSet<String> rocksDBZSet = new RocksZSet(rocksDBConfig, "zset1", "names", String.class);
+
+        for (int i = 0; i < 1000; i++) {
+            rocksDBZSet.add("number-" + i, (long) i);
+        }
+
+        var iterator = rocksDBZSet.membersWithScoresIterable();
+
+        iterator.skip(100);
+
+        var membersWithScore = new ArrayList<Tuple<String, Long>>();
+        while (iterator.hasNext()) {
+            membersWithScore.add(iterator.next());
+        }
+
+        assertThat(membersWithScore).hasSize(900);
+        assertThat(membersWithScore.get(0)).isEqualTo(new Tuple<>("number-100", 100L));
+    }
 }

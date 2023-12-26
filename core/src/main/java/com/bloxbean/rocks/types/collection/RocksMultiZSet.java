@@ -27,13 +27,13 @@ import static com.bloxbean.rocks.types.common.KeyBuilder.longToBytes;
 public class RocksMultiZSet<T> extends BaseDataType<T> {
 
     public RocksMultiZSet(@NonNull RocksDBConfig rocksDBConfig, String columnFamily,
-                          @NonNull String name, Class<T> valueType) {
-        super(rocksDBConfig, columnFamily, name, valueType);
+                          @NonNull String name, Class<T> memberType) {
+        super(rocksDBConfig, columnFamily, name, memberType);
     }
 
     public RocksMultiZSet(@NonNull RocksDBConfig rocksDBConfig,
-                          @NonNull String name, Class<T> valueType) {
-        super(rocksDBConfig, null, name, valueType);
+                          @NonNull String name, Class<T> memberType) {
+        super(rocksDBConfig, null, name, memberType);
     }
 
     @SneakyThrows
@@ -49,9 +49,9 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
         }
     }
 
-    private void add(byte[] ns, WriteBatch writeBatch, SetMetadata metadata, T value, Long score) {
-        write(writeBatch, getMemberSubKey(metadata, ns, value), valueSerializer.serialize(score));
-        write(writeBatch, getScoreSubKey(metadata, ns, value, score), new byte[0]);
+    private void add(byte[] ns, WriteBatch writeBatch, SetMetadata metadata, T member, Long score) {
+        write(writeBatch, getMemberSubKey(metadata, ns, member), valueSerializer.serialize(score));
+        write(writeBatch, getScoreSubKey(metadata, ns, member, score), new byte[0]);
     }
 
     public Optional<Long> getScore(byte[] ns, T member) {
