@@ -98,9 +98,10 @@ public class RocksMultiMap<K, V> extends BaseDataType<V> {
         if (metadata.isEmpty())
             return;
 
-        WriteBatch writeBatch = new WriteBatch();
-        delete(ns, writeBatch, metadata.get(), key);
-        db.write(new WriteOptions(), writeBatch);
+        try(WriteBatch writeBatch = new WriteBatch()) {
+            delete(ns, writeBatch, metadata.get(), key);
+            db.write(new WriteOptions(), writeBatch);
+        }
     }
 
     @SneakyThrows
