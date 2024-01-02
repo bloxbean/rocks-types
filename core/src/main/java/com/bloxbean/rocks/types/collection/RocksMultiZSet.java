@@ -81,9 +81,10 @@ public class RocksMultiZSet<T> extends BaseDataType<T> {
         var metadata = getMetadata(ns);
         if (metadata.isEmpty())
             return;
-        try(WriteBatch writeBatch = new WriteBatch()) {
+        try(var writeBatch = new WriteBatch();
+            var writeOption = new WriteOptions()) {
             delete(ns, writeBatch, metadata.get(), member);
-            db.write(new WriteOptions(), writeBatch);
+            db.write(writeOption, writeBatch);
         }
     }
 
